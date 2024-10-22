@@ -1,0 +1,4 @@
+pnpm lint
+pnpm prettier
+pnpm test
+git add --all
