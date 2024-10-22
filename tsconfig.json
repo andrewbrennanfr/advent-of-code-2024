@@ -1,0 +1,10 @@
+{
+    "extends": "@tsconfig/strictest/tsconfig.json",
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "noEmit": true,
+        "paths": { "@/*": ["./src/*"] },
+        "target": "ESNext"
+    }
+}

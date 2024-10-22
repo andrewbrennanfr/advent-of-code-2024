@@ -1,0 +1,36 @@
+{
+    "name": "advent-of-code-2024",
+    "version": "1.0.0",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/andrewbrennanfr/advent-of-code-2024.git"
+    },
+    "author": {
+        "name": "Andrew Brennan",
+        "url": "https://github.com/andrewbrennanfr"
+    },
+    "license": "MIT",
+    "scripts": {
+        "check": "tsc -p ./tsconfig.json",
+        "format": "prettier --write ./",
+        "husky": "husky",
+        "lint": "eslint ./ --fix",
+        "new": "bash ./new.sh",
+        "start": "bun test --watch"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.16.0",
+        "@tsconfig/strictest": "^2.0.5",
+        "@types/bun": "^1.1.14",
+        "@types/eslint__js": "^8.42.3",
+        "eslint": "^9.16.0",
+        "eslint-plugin-functional": "^7.1.0",
+        "eslint-plugin-perfectionist": "^4.1.2",
+        "eslint-plugin-unicorn": "^56.0.1",
+        "husky": "^9.1.7",
+        "prettier": "^3.4.1",
+        "typescript": "^5.7.2",
+        "typescript-eslint": "^8.17.0"
+    }
+}

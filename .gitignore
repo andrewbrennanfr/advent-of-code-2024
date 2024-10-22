@@ -1,0 +1,6 @@
+example.ts
+input.ts
+!src/00/example.ts
+!src/00/input.ts
+node_modules/
+private/
