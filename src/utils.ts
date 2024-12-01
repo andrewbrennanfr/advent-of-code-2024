@@ -8,5 +8,58 @@ export const $ =
     (...arguments_) =>
         (cache[hash(arguments_)] ??= function_(...arguments_)) // eslint-disable-line functional/immutable-data
 
+/** Checks if a value is not undefined. */
+export const _ = <T>(value: T | undefined): value is T => value !== undefined // eslint-disable-line no-undefined
+
+/** Retrieves an item from a list or throws an error if the index is out of bounds. */
+export const at = <T>(list: T[], index: number): T =>
+    _(list[index]) ? list[index] : panic(`No item at index: ${index}`)
+
+/** Rotates a 2D array 90 degrees clockwise. */
+export const clockwise = <T>([first = [], ...rest]: T[][]): T[][] =>
+    first.map((item, index) =>
+        [item, ...rest.map((row) => at(row, index))].toReversed(),
+    )
+
+/** Merges arrays by applying a function to combine elements at each index. */
+export const converge = <T>(
+    lists: T[][],
+    combine: (left: T[], right: T[], index: number) => T,
+): T[] =>
+    lists.reduce((left, right) =>
+        left.map((__, index) => combine(left, right, index)),
+    )
+
+/** Returns the number of items in a list that satisfy a given predicate. */
+export const count = <T>(
+    list: T[],
+    predicate: (item: T, index: number, list: T[]) => boolean,
+): number => list.filter(predicate).length
+
+/** Calculates the absolute difference between two numbers. */
+export const distance = (left: number, right: number): number =>
+    Math.abs(left - right)
+
 /** Splits a string into an array of lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
+
+/** Throws an error with the provided message. */
+export const panic = (message: string): never => {
+    throw new Error(message) // eslint-disable-line functional/no-throw-statements
+}
+
+/** Sorts a list using a custom comparison function. */
+export const sort = <T>(
+    list: T[],
+    compare: (left: T, right: T) => number = (left, right) =>
+        left < right ? -1
+        : right > left ? 1
+        : 0,
+): T[] => list.toSorted(compare)
+
+/** Splits a string by one or more spaces. */
+export const spaces = (string: string): string[] => string.split(/ +/u)
+
+/** Calculates the total sum of an array of numbers. */
+export const sum = (numbers: number[]): number =>
+    numbers.reduce((total, number) => total + number, 0)
