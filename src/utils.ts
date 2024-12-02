@@ -11,9 +11,17 @@ export const $ =
 /** Checks if a value is not undefined. */
 export const _ = <T>(value: T | undefined): value is T => value !== undefined // eslint-disable-line no-undefined
 
+/** Checks if an array of numbers is sorted in ascending order. */
+export const ascending = (numbers: number[]): boolean =>
+    follows(numbers, (left, right) => left >= right)
+
 /** Retrieves an item from a list or throws an error if the index is out of bounds. */
 export const at = <T>(list: T[], index: number): T =>
     _(list[index]) ? list[index] : panic(`No item at index: ${index}`)
+
+/** Checks if a number is inclusively between two other numbers. */
+export const between = (left: number, number: number, right: number): boolean =>
+    (left <= number && right >= number) || (right <= number && left >= number)
 
 /** Rotates a 2D array 90 degrees clockwise. */
 export const clockwise = <T>([first = [], ...rest]: T[][]): T[][] =>
@@ -36,9 +44,22 @@ export const count = <T>(
     predicate: (item: T, index: number, list: T[]) => boolean,
 ): number => list.filter(predicate).length
 
+/** Checks if an array of numbers is sorted in descending order. */
+export const descending = (numbers: number[]): boolean =>
+    ascending(numbers.toReversed())
+
 /** Calculates the absolute difference between two numbers. */
 export const distance = (left: number, right: number): number =>
     Math.abs(left - right)
+
+/** Checks if each item in an array satisfies a predicate when compared to its predecessor. */
+export const follows = <T>(
+    items: T[],
+    predicate: (left: T, right: T) => boolean,
+): boolean =>
+    items.every(
+        (item, index) => index === 0 || predicate(at(items, index - 1), item),
+    )
 
 /** Splits a string into an array of lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
@@ -63,3 +84,9 @@ export const spaces = (string: string): string[] => string.split(/ +/u)
 /** Calculates the total sum of an array of numbers. */
 export const sum = (numbers: number[]): number =>
     numbers.reduce((total, number) => total + number, 0)
+
+/** Returns a new array with the item at the specified index removed. */
+export const without = <T>(items: T[], index: number): T[] => [
+    ...items.slice(0, index),
+    ...items.slice(index + 1),
+]
