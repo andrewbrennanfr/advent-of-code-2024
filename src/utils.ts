@@ -64,10 +64,25 @@ export const follows = <T>(
 /** Splits a string into an array of lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
 
+/** Returns an array of all regex matches found in a string. */
+export const match = (
+    string: string,
+    regex: RegExp,
+): (Omit<RegExpExecArray, "groups"> &
+    Required<Pick<RegExpExecArray, "groups">>)[] =>
+    [...string.matchAll(regex)].map(({ groups, ...rest }) => ({
+        ...rest,
+        groups: { ...groups },
+    }))
+
 /** Throws an error with the provided message. */
 export const panic = (message: string): never => {
     throw new Error(message) // eslint-disable-line functional/no-throw-statements
 }
+
+/** Calculates the total product of an array of numbers. */
+export const product = (numbers: number[]): number =>
+    numbers.reduce((total, number) => total * number, 1)
 
 /** Sorts a list using a custom comparison function. */
 export const sort = <T>(
