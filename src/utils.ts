@@ -1,4 +1,10 @@
-/** Memoizes a function by caching results based on a hash of its arguments. */
+/** Partially applies arguments to a function, returning a new function with the remaining arguments. */
+export const λ = <T extends unknown[], U extends unknown[], V>(
+    function_: (...arguments_: [...T, ...U]) => V,
+    ...arguments_: T
+): ((...arguments_: U) => V) => function_.bind(0, ...arguments_)
+
+/** Caches the results of a function based on a hash of its arguments. */
 export const $ =
     <T extends unknown[], U>(
         function_: (...arguments_: T) => U,
@@ -8,138 +14,228 @@ export const $ =
     (...arguments_) =>
         (cache[hash(arguments_)] ??= function_(...arguments_)) // eslint-disable-line functional/immutable-data
 
-/** Checks if a value is not undefined. */
-export const _ = <T>(value: T | undefined): value is T => value !== undefined // eslint-disable-line no-undefined
+/** Returns true if a value is defined. */
+export const _ = <T>(value: T): value is NonNullable<T> =>
+    value !== null && value !== undefined // eslint-disable-line no-undefined
 
-/** Checks if an array of numbers is sorted in ascending order. */
+/** Returns the sum of two numbers. */
+export const add = (left: number, right: number): number => left + right
+
+/** Returns true if an array of numbers is sorted in ascending order. */
 export const ascending = (numbers: number[]): boolean =>
     follows(numbers, (left, right) => left >= right)
 
-/** Retrieves an item from a list or throws an error if the index is out of bounds. */
-export const at = <T>(list: T[], index: number): T =>
-    _(list[index]) ? list[index] : panic(`No item at index: ${index}`)
+/** Retrieves a value from an array or throws an error if the value is not defined. */
+export const at = <T>(index: number, array: T[]): NonNullable<T> =>
+    guard(array[(index + array.length) % array.length])
 
-/** Checks if a number is inclusively between two other numbers. */
+/** Returns true if a number is inclusively between two other numbers. */
 export const between = (left: number, number: number, right: number): boolean =>
-    (left <= number && right >= number) || (right <= number && left >= number)
+    (left <= number && number <= right) || (right <= number && number <= left)
 
-/** Returns the value in a cell in a 2D grid */
+/** Returns the value at a specific position in a 2D grid. */
 export const cell = <T>(
     grid: T[][],
-    { c, r }: { c: number; r: number },
+    { c, r }: Record<"c" | "r", number>,
 ): T | undefined => grid[r]?.[c]
 
-/** Rotates a 2D array 90 degrees clockwise. */
-export const clockwise = <T>([first = [], ...rest]: T[][]): T[][] =>
-    first.map((item, index) =>
-        [item, ...rest.map((row) => at(row, index))].toReversed(),
-    )
+/** Rotates a 2D array clockwise by a specified degree. */
+export const clockwise = <T>(
+    [first = [], ...grid]: T[][],
+    degrees = 90,
+): T[][] =>
+    degrees <= 0 ?
+        [first, ...grid]
+    :   clockwise(
+            first.map((cell, index) =>
+                [cell, ...grid.map(λ(at, index))].toReversed(),
+            ),
+            degrees - 90,
+        )
 
-/** Merges arrays by applying a function to combine elements at each index. */
+/** Combines arrays by applying a function to elements at each index. */
 export const converge = <T>(
-    lists: T[][],
+    arrays: T[][],
     combine: (left: T[], right: T[], index: number) => T,
 ): T[] =>
-    lists.reduce((left, right) =>
+    arrays.reduce((left, right) =>
         left.map((__, index) => combine(left, right, index)),
     )
 
-/** Returns the number of items in a list that satisfy a given predicate. */
+/** Counts the number of values in an array that satisfy a given condition. */
 export const count = <T>(
-    list: T[],
-    predicate: (item: T, index: number, list: T[]) => boolean,
-): number => list.filter(predicate).length
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): number => array.filter(predicate).length
 
-/** Checks if an array of numbers is sorted in descending order. */
+/** Returns the diagonal positions relative to a 2D grid position. */
+export const cousins = (
+    position: Record<"c" | "r", number>,
+): Record<
+    "northEast" | "northWest" | "southEast" | "southWest",
+    Record<"c" | "r", number>
+> => ({
+    northEast: northEast(position),
+    northWest: northWest(position),
+    southEast: southEast(position),
+    southWest: southWest(position),
+})
+
+/** Returns true if an array of numbers is sorted in descending order. */
 export const descending = (numbers: number[]): boolean =>
     ascending(numbers.toReversed())
 
-/** Calculates the absolute difference between two numbers. */
+/** Returns the absolute difference between two numbers. */
 export const distance = (left: number, right: number): number =>
     Math.abs(left - right)
 
-/** Checks if each item in an array satisfies a predicate when compared to its predecessor. */
+/** Returns the position east of the given position. */
+export const east = ({
+    c,
+    r,
+}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c: c + 1, r })
+
+/** Returns true if each value in an array satisfies a predicate with its predecessor. */
 export const follows = <T>(
-    items: T[],
+    array: T[],
     predicate: (left: T, right: T) => boolean,
 ): boolean =>
-    items.every(
-        (item, index) => index === 0 || predicate(at(items, index - 1), item),
+    array.every(
+        (value, index) => index === 0 || predicate(at(index - 1, array), value),
     )
 
-/** Generates a new 2D grid. */
-export const grid = (string: string): string[][] =>
-    lines(string).map((line) => [...line])
+/** Generates a 2D grid from a string. */
+export const grid = (
+    string: string,
+    separator: RegExp | string = "",
+): string[][] => lines(string).map((line) => line.split(separator))
 
-/** Splits a string into an array of lines. */
+/** Ensures a value is not null or undefined, throwing an error if the check fails. */
+export const guard = <T>(value: T): NonNullable<T> =>
+    _(value) ? value : panic(`${String(value)} did not pass guard!`)
+
+/** Splits a string into an array of trimmed lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
 
-/** Maps a 2D grid to a new 2D grid. */
+/** Maps each cell of a 2D grid to a new value using a function. */
 export const map2d = <T, U>(
     grid: T[][],
-    iteratee: (cell: T, { c, r }: { c: number; r: number }, grid: T[][]) => U,
+    iteratee: (cell: T, position: Record<"c" | "r", number>, grid: T[][]) => U,
 ): U[][] =>
     grid.map((row, r) => row.map((cell, c) => iteratee(cell, { c, r }, grid)))
 
-/** Returns an array of all regex matches found in a string. */
+/** Returns all matches of a regex in a string as an array. */
 export const match = (
     string: string,
     regex: RegExp,
 ): (Omit<RegExpExecArray, "groups"> &
     Required<Pick<RegExpExecArray, "groups">>)[] =>
-    [...string.matchAll(regex)].map(({ groups, ...rest }) => ({
-        ...rest,
+    [...string.matchAll(regex)].map(({ groups, ...match }) => ({
+        ...match,
         groups: { ...groups },
     }))
 
-/** Throws an error with the provided message. */
+/** Returns the product of two numbers. */
+export const multiply = (left: number, right: number): number => left * right
+
+/** Returns the position north of the given position. */
+export const north = ({
+    c,
+    r,
+}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c, r: r - 1 })
+
+/** Returns the position northeast of the given position. */
+export const northEast = (
+    position: Record<"c" | "r", number>,
+): Record<"c" | "r", number> => north(east(position))
+
+/** Returns the position northwest of the given position. */
+export const northWest = (
+    position: Record<"c" | "r", number>,
+): Record<"c" | "r", number> => north(west(position))
+
+/** Throws an error with the specified message. */
 export const panic = (message: string): never => {
     throw new Error(message) // eslint-disable-line functional/no-throw-statements
 }
 
-/** Calculates the total product of an array of numbers. */
-export const product = (numbers: number[]): number =>
-    numbers.reduce((total, number) => total * number, 1)
+/** Generates a sequence of positions in a given direction. */
+export const path = (
+    start: Record<"c" | "r", number>[],
+    direction: (
+        position: Record<"c" | "r", number>,
+    ) => Record<"c" | "r", number>,
+    moves: number,
+): Record<"c" | "r", number>[] =>
+    moves === 0 ? start : (
+        path([...start, direction(at(-1, start))], direction, moves - 1)
+    )
 
-/** Returns the sibling position for a given 2D grid position */
-export const siblings = ({
-    c,
-    r,
-}: {
-    c: number
-    r: number
-}): Record<
-    "e" | "n" | "ne" | "nw" | "s" | "se" | "sw" | "w",
-    { c: number; r: number }
-> => ({
-    e: { c: c + 1, r },
-    n: { c, r: r - 1 },
-    ne: { c: c + 1, r: r - 1 },
-    nw: { c: c - 1, r: r - 1 },
-    s: { c, r: r + 1 },
-    se: { c: c + 1, r: r + 1 },
-    sw: { c: c - 1, r: r + 1 },
-    w: { c: c - 1, r },
+/** Returns the product of all numbers in an array. */
+export const product = (numbers: number[]): number =>
+    numbers.reduce(multiply, 1)
+
+/** Returns the adjacent positions of a given position in a 2D grid. */
+export const siblings = (
+    position: Record<"c" | "r", number>,
+): Record<"east" | "north" | "south" | "west", Record<"c" | "r", number>> => ({
+    east: east(position),
+    north: north(position),
+    south: south(position),
+    west: west(position),
 })
 
-/** Sorts a list using a custom comparison function. */
+/** Sorts an array using a comparison function. */
 export const sort = <T>(
-    list: T[],
+    array: T[],
     compare: (left: T, right: T) => number = (left, right) =>
         left < right ? -1
         : right > left ? 1
         : 0,
-): T[] => list.toSorted(compare)
+): T[] => array.toSorted(compare)
 
-/** Splits a string by one or more spaces. */
-export const spaces = (string: string): string[] => string.split(/ +/u)
+/** Returns the position south of the given position. */
+export const south = ({
+    c,
+    r,
+}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c, r: r + 1 })
 
-/** Calculates the total sum of an array of numbers. */
-export const sum = (numbers: number[]): number =>
-    numbers.reduce((total, number) => total + number, 0)
+/** Returns the position southeast of the given position. */
+export const southEast = (
+    position: Record<"c" | "r", number>,
+): Record<"c" | "r", number> => south(east(position))
 
-/** Returns a new array with the item at the specified index removed. */
-export const without = <T>(items: T[], index: number): T[] => [
-    ...items.slice(0, index),
-    ...items.slice(index + 1),
+/** Returns the position southwest of the given position. */
+export const southWest = (
+    position: Record<"c" | "r", number>,
+): Record<"c" | "r", number> => south(west(position))
+
+/** Returns the sum of all numbers in an array. */
+export const sum = (numbers: number[]): number => numbers.reduce(add, 0)
+
+/** Returns all surrounding positions for a given 2D grid position. */
+export const surrounding = (
+    position: Record<"c" | "r", number>,
+): Record<
+    | "east"
+    | "north"
+    | "northEast"
+    | "northWest"
+    | "south"
+    | "southEast"
+    | "southWest"
+    | "west",
+    Record<"c" | "r", number>
+> => ({ ...cousins(position), ...siblings(position) })
+
+/** Returns the position west of the given position. */
+export const west = ({
+    c,
+    r,
+}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c: c - 1, r })
+
+/** Removes the value at the specified index from an array. */
+export const without = <T>(array: T[], index: number): T[] => [
+    ...array.slice(0, index),
+    ...array.slice(index + 1),
 ]

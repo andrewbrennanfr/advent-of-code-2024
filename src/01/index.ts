@@ -1,10 +1,5 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[][] =>
-    U.clockwise(U.lines(input).map((line) => U.spaces(line).map(Number))).map(
-        (numbers) => U.sort(numbers),
-    )
-
 /* --------------------------------- part01 --------------------------------- */
 
 export const part01 = (
@@ -13,8 +8,16 @@ export const part01 = (
         left,
         right,
         index,
-    ) => U.distance(U.at(left, index), U.at(right, index)),
-): number => U.sum(U.converge(parse(input), combine))
+    ) => U.distance(U.at(index, left), U.at(index, right)),
+): number =>
+    U.sum(
+        U.converge(
+            U.clockwise(U.map2d(U.grid(input, / +/u), Number)).map((numbers) =>
+                U.sort(numbers),
+            ),
+            combine,
+        ),
+    )
 
 /* --------------------------------- part02 --------------------------------- */
 
@@ -22,6 +25,6 @@ export const part02 = (input: string): number =>
     part01(
         input,
         (left, right, index) =>
-            U.at(left, index) *
-            U.count(right, (number) => number === U.at(left, index)),
+            U.at(index, left) *
+            U.count(right, (number) => number === U.at(index, left)),
     )

@@ -1,8 +1,5 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[][] =>
-    U.lines(input).map((line) => U.spaces(line).map(Number))
-
 const safe = (numbers: number[]): boolean =>
     (U.ascending(numbers) || U.descending(numbers)) &&
     U.follows(numbers, (left, right) =>
@@ -14,7 +11,7 @@ const safe = (numbers: number[]): boolean =>
 export const part01 = (
     input: string,
     predicate: (numbers: number[]) => boolean = safe,
-): number => U.count(parse(input), predicate)
+): number => U.count(U.map2d(U.grid(input, " "), Number), predicate)
 
 /* --------------------------------- part02 --------------------------------- */
 
