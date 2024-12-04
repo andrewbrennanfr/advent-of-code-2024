@@ -23,6 +23,12 @@ export const at = <T>(list: T[], index: number): T =>
 export const between = (left: number, number: number, right: number): boolean =>
     (left <= number && right >= number) || (right <= number && left >= number)
 
+/** Returns the value in a cell in a 2D grid */
+export const cell = <T>(
+    grid: T[][],
+    { c, r }: { c: number; r: number },
+): T | undefined => grid[r]?.[c]
+
 /** Rotates a 2D array 90 degrees clockwise. */
 export const clockwise = <T>([first = [], ...rest]: T[][]): T[][] =>
     first.map((item, index) =>
@@ -61,8 +67,19 @@ export const follows = <T>(
         (item, index) => index === 0 || predicate(at(items, index - 1), item),
     )
 
+/** Generates a new 2D grid. */
+export const grid = (string: string): string[][] =>
+    lines(string).map((line) => [...line])
+
 /** Splits a string into an array of lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
+
+/** Maps a 2D grid to a new 2D grid. */
+export const map2d = <T, U>(
+    grid: T[][],
+    iteratee: (cell: T, { c, r }: { c: number; r: number }, grid: T[][]) => U,
+): U[][] =>
+    grid.map((row, r) => row.map((cell, c) => iteratee(cell, { c, r }, grid)))
 
 /** Returns an array of all regex matches found in a string. */
 export const match = (
@@ -83,6 +100,27 @@ export const panic = (message: string): never => {
 /** Calculates the total product of an array of numbers. */
 export const product = (numbers: number[]): number =>
     numbers.reduce((total, number) => total * number, 1)
+
+/** Returns the sibling position for a given 2D grid position */
+export const siblings = ({
+    c,
+    r,
+}: {
+    c: number
+    r: number
+}): Record<
+    "e" | "n" | "ne" | "nw" | "s" | "se" | "sw" | "w",
+    { c: number; r: number }
+> => ({
+    e: { c: c + 1, r },
+    n: { c, r: r - 1 },
+    ne: { c: c + 1, r: r - 1 },
+    nw: { c: c - 1, r: r - 1 },
+    s: { c, r: r + 1 },
+    se: { c: c + 1, r: r + 1 },
+    sw: { c: c - 1, r: r + 1 },
+    w: { c: c - 1, r },
+})
 
 /** Sorts a list using a custom comparison function. */
 export const sort = <T>(
