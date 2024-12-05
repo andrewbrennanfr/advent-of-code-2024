@@ -115,6 +115,14 @@ export const grid = (
 export const guard = <T>(value: T): NonNullable<T> =>
     _(value) ? value : panic(`${String(value)} did not pass guard!`)
 
+/** Checks if an array contains a specific value. */
+export const included = <T>(array: T[], value: T): boolean =>
+    array.includes(value)
+
+/** Checks if a value is present in an array. */
+export const includes = <T>(value: T, array: T[]): boolean =>
+    included(array, value)
+
 /** Returns the second argument, ignoring the first. */
 export const index = <T>(_: unknown, index: T): T => index
 
@@ -139,6 +147,9 @@ export const match = (
         groups: { ...groups },
     }))
 
+/** Returns the middle element of an array. If the array has an even length, it returns the element at the lower middle index. */
+export const middle = <T>(array: T[]): T => at(array, (array.length - 1) / 2)
+
 /** Returns the product of two numbers. */
 export const multiply = (left: number, right: number): number => left * right
 
@@ -157,6 +168,14 @@ export const northEast = (
 export const northWest = (
     position: Record<"c" | "r", number>,
 ): Record<"c" | "r", number> => north(west(position))
+
+/** Returns a function that negates the result of the provided predicate. */
+export const not =
+    <T extends unknown[]>(
+        predicate: (...arguments_: T) => boolean,
+    ): ((...arguments_: T) => boolean) =>
+    (...arguments_) =>
+        !predicate(...arguments_)
 
 /** Throws an error with the specified message. */
 export const panic = (message: string): never => {
@@ -215,7 +234,8 @@ export const southWest = (
 ): Record<"c" | "r", number> => south(west(position))
 
 /** Concatenates an array of strings into a single string without any separator. */
-export const string = (strings: string[]): string => strings.join("")
+export const string = <T extends number | string>(values: T[]): string =>
+    values.join("")
 
 /** Returns the sum of all numbers in an array. */
 export const sum = (numbers: number[]): number => numbers.reduce(add, 0)
