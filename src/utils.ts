@@ -1,8 +1,11 @@
 /** Partially applies arguments to a function, returning a new function with the remaining arguments. */
-export const λ = <T extends unknown[], U extends unknown[], V>(
-    function_: (...arguments_: [...T, ...U]) => V,
-    ...arguments_: T
-): ((...arguments_: U) => V) => function_.bind(0, ...arguments_)
+export const λ =
+    <T extends unknown[], U extends unknown[], V>(
+        function_: (...arguments_: [...T, ...U]) => V,
+        ...partial: T
+    ): ((...remaining: U) => V) =>
+    (...remaining) =>
+        function_(...partial, ...remaining)
 
 /** Caches the results of a function based on a hash of its arguments. */
 export const $ =
@@ -26,7 +29,7 @@ export const ascending = (numbers: number[]): boolean =>
     follows(numbers, (left, right) => left >= right)
 
 /** Retrieves a value from an array or throws an error if the value is not defined. */
-export const at = <T>(index: number, array: T[]): NonNullable<T> =>
+export const at = <T>(array: T[], index: number): NonNullable<T> =>
     guard(array[(index + array.length) % array.length])
 
 /** Returns true if a number is inclusively between two other numbers. */
@@ -48,7 +51,7 @@ export const clockwise = <T>(
         [first, ...grid]
     :   clockwise(
             first.map((cell, index) =>
-                [cell, ...grid.map(λ(at, index))].toReversed(),
+                [cell, ...grid.map((row) => at(row, index))].toReversed(),
             ),
             degrees - 90,
         )
@@ -58,9 +61,7 @@ export const converge = <T>(
     arrays: T[][],
     combine: (left: T[], right: T[], index: number) => T,
 ): T[] =>
-    arrays.reduce((left, right) =>
-        left.map((__, index) => combine(left, right, index)),
-    )
+    arrays.reduce((left, right) => left.map(index).map(λ(combine, left, right)))
 
 /** Counts the number of values in an array that satisfy a given condition. */
 export const count = <T>(
@@ -101,7 +102,7 @@ export const follows = <T>(
     predicate: (left: T, right: T) => boolean,
 ): boolean =>
     array.every(
-        (value, index) => index === 0 || predicate(at(index - 1, array), value),
+        (value, index) => index === 0 || predicate(at(array, index - 1), value),
     )
 
 /** Generates a 2D grid from a string. */
@@ -114,11 +115,14 @@ export const grid = (
 export const guard = <T>(value: T): NonNullable<T> =>
     _(value) ? value : panic(`${String(value)} did not pass guard!`)
 
+/** Returns the second argument, ignoring the first. */
+export const index = <T>(_: unknown, index: T): T => index
+
 /** Splits a string into an array of trimmed lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
 
 /** Maps each cell of a 2D grid to a new value using a function. */
-export const map2d = <T, U>(
+export const map2D = <T, U>(
     grid: T[][],
     iteratee: (cell: T, position: Record<"c" | "r", number>, grid: T[][]) => U,
 ): U[][] =>
@@ -168,12 +172,12 @@ export const path = (
     moves: number,
 ): Record<"c" | "r", number>[] =>
     moves === 0 ? start : (
-        path([...start, direction(at(-1, start))], direction, moves - 1)
+        path([...start, direction(at(start, -1))], direction, moves - 1)
     )
 
 /** Returns the product of all numbers in an array. */
 export const product = (numbers: number[]): number =>
-    numbers.reduce(multiply, 1)
+    numbers.reduce(multiply, Number(numbers.length > 0))
 
 /** Returns the adjacent positions of a given position in a 2D grid. */
 export const siblings = (
@@ -209,6 +213,9 @@ export const southEast = (
 export const southWest = (
     position: Record<"c" | "r", number>,
 ): Record<"c" | "r", number> => south(west(position))
+
+/** Concatenates an array of strings into a single string without any separator. */
+export const string = (strings: string[]): string => strings.join("")
 
 /** Returns the sum of all numbers in an array. */
 export const sum = (numbers: number[]): number => numbers.reduce(add, 0)

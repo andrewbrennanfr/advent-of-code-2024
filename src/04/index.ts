@@ -10,7 +10,8 @@ const solve = (
 ): number =>
     U.sum(
         [0, 90, 180, 270]
-            .flatMap((degrees) => U.map2d(U.clockwise(grid, degrees), evaluate))
+            .map(U.λ(U.clockwise, grid))
+            .flatMap((grid) => U.map2D(grid, evaluate))
             .flat(),
     )
 
@@ -25,7 +26,8 @@ export const part01 = (input: string): number =>
                     U.path([position], U.southEast, 3),
                 ],
                 (positions) =>
-                    positions.map(U.λ(U.cell, grid)).join("") === "XMAS",
+                    U.string(positions.map(U.λ(U.cell, grid)).filter(U._)) ===
+                    "XMAS",
             )
         :   0,
     )
@@ -41,7 +43,9 @@ export const part02 = (input: string): number =>
                     U.path([U.southWest(position)], U.northEast, 2),
                 ].every(
                     (positions) =>
-                        positions.map(U.λ(U.cell, grid)).join("") === "MAS",
+                        U.string(
+                            positions.map(U.λ(U.cell, grid)).filter(U._),
+                        ) === "MAS",
                 ),
             )
         :   0,

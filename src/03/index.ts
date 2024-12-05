@@ -1,21 +1,21 @@
 import * as U from "@/utils"
 
-/* --------------------------------- part01 --------------------------------- */
-
-export const part01 = (
-    input: string,
-    predicate: (before: string) => boolean = U._,
-): number =>
+const solve = (input: string, predicate: (before: string) => boolean): number =>
     U.sum(
         U.match(input, /mul\((?<left>\d+),(?<right>\d+)\)/gu)
             .filter((mul) => predicate(input.slice(0, mul.index)))
-            .map(({ groups }) => U.product(Object.values(groups).map(Number))),
+            .map(({ groups }) => Object.values(groups).map(Number))
+            .map(U.product),
     )
+
+/* --------------------------------- part01 --------------------------------- */
+
+export const part01 = (input: string): number => solve(input, U._)
 
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
-    part01(
+    solve(
         input,
         (before) => before.lastIndexOf("do()") >= before.lastIndexOf("don't()"),
     )
