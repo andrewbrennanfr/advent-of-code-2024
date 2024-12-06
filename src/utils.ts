@@ -11,7 +11,14 @@ export const λ =
 export const $ =
     <T extends unknown[], U>(
         function_: (...arguments_: T) => U,
-        hash: (arguments_: T) => string = JSON.stringify,
+        hash: (arguments_: T) => string = (arguments_) =>
+            JSON.stringify(
+                arguments_.map((argument) =>
+                    typeof argument === "function" && argument.name ?
+                        argument.name
+                    :   argument,
+                ),
+            ),
         cache: Record<string, U> = {},
     ): typeof function_ =>
     (...arguments_) =>
@@ -183,16 +190,18 @@ export const panic = (message: string): never => {
 }
 
 /** Generates a sequence of positions in a given direction. */
-export const path = (
-    start: Record<"c" | "r", number>[],
-    direction: (
-        position: Record<"c" | "r", number>,
-    ) => Record<"c" | "r", number>,
-    moves: number,
-): Record<"c" | "r", number>[] =>
-    moves === 0 ? start : (
-        path([...start, direction(at(start, -1))], direction, moves - 1)
-    )
+export const path = $(
+    (
+        start: Record<"c" | "r", number>,
+        direction: (
+            position: Record<"c" | "r", number>,
+        ) => Record<"c" | "r", number>,
+        moves: number,
+    ): Record<"c" | "r", number>[] =>
+        moves === 0 ?
+            [start]
+        :   [start, ...path(direction(start), direction, moves - 1)],
+)
 
 /** Returns the product of all numbers in an array. */
 export const product = (numbers: number[]): number =>
@@ -207,6 +216,14 @@ export const siblings = (
     south: south(position),
     west: west(position),
 })
+
+/** Extracts a portion of an array between specified start and end indices. */
+export const subset = <T>(start: number, end: number, array: T[]): T[] =>
+    array.slice(start, end)
+
+/** Extracts a portion of a string between specified start and end indices. */
+export const substring = (start: number, end: number, string: string): string =>
+    string.slice(start, end)
 
 /** Sorts an array using a comparison function. */
 export const sort = <T>(
@@ -255,6 +272,15 @@ export const surrounding = (
     Record<"c" | "r", number>
 > => ({ ...cousins(position), ...siblings(position) })
 
+/** Extracts a portion of an array up to the first element that satisfies a predicate. */
+export const until = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): T[] => {
+    const index = array.findIndex(predicate)
+    return index === -1 ? array : subset(0, index, array)
+}
+
 /** Returns the position west of the given position. */
 export const west = ({
     c,
@@ -263,6 +289,6 @@ export const west = ({
 
 /** Removes the value at the specified index from an array. */
 export const without = <T>(array: T[], index: number): T[] => [
-    ...array.slice(0, index),
-    ...array.slice(index + 1),
+    ...subset(0, index, array),
+    ...subset(index + 1, array.length, array),
 ]

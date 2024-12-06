@@ -23,7 +23,7 @@ export const part01 = (input: string): number =>
                 [U.east, U.southEast],
                 (direction) =>
                     U.string(
-                        U.path([position], direction, 3)
+                        U.path(position, direction, 3)
                             .map(U.λ(U.cell, grid))
                             .filter(U._),
                     ) === "XMAS",
@@ -38,8 +38,8 @@ export const part02 = (input: string): number =>
         cell === "A" ?
             Number(
                 [
-                    U.path([U.northWest(position)], U.southEast, 2),
-                    U.path([U.southWest(position)], U.northEast, 2),
+                    U.path(U.northWest(position), U.southEast, 2),
+                    U.path(U.southWest(position), U.northEast, 2),
                 ].every(
                     (positions) =>
                         U.string(
