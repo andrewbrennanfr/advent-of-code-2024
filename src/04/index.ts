@@ -7,12 +7,11 @@ const solve = (
         position: Record<"c" | "r", number>,
         grid: string[][],
     ) => number,
+    degrees = 0,
 ): number =>
-    U.sum(
-        [0, 90, 180, 270]
-            .map(U.λ(U.clockwise, grid))
-            .flatMap((grid) => U.map2D(grid, evaluate))
-            .flat(),
+    degrees === 360 ? 0 : (
+        U.sum(U.map2D(grid, evaluate).flat()) +
+        solve(U.clockwise(grid, degrees + 90), evaluate, degrees + 90)
     )
 
 /* --------------------------------- part01 --------------------------------- */
@@ -21,13 +20,13 @@ export const part01 = (input: string): number =>
     solve(U.grid(input), (cell, position, grid) =>
         cell === "X" ?
             U.count(
-                [
-                    U.path([position], U.east, 3),
-                    U.path([position], U.southEast, 3),
-                ],
-                (positions) =>
-                    U.string(positions.map(U.λ(U.cell, grid)).filter(U._)) ===
-                    "XMAS",
+                [U.east, U.southEast],
+                (direction) =>
+                    U.string(
+                        U.path([position], direction, 3)
+                            .map(U.λ(U.cell, grid))
+                            .filter(U._),
+                    ) === "XMAS",
             )
         :   0,
     )

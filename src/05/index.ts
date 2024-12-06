@@ -7,9 +7,9 @@ const parse = (
 
     return {
         rules: Object.fromEntries(
-            U.map2D(U.grid(U.at(chunks, 0), "|"), Number).map((rule) => [
-                String(rule),
-                rule,
+            U.map2D(U.grid(U.at(chunks, 0), "|"), Number).flatMap((rule) => [
+                [String(rule), rule],
+                [String(rule.toReversed()), rule],
             ]),
         ),
         updates: U.map2D(U.grid(U.at(chunks, 1), ","), Number),
@@ -18,17 +18,7 @@ const parse = (
 
 const sort = (rules: Record<string, number[]>, update: number[]): number[] =>
     U.sort(update, (left, right) =>
-        (
-            U.at(
-                U.guard(
-                    rules[String([left, right])] ??
-                        rules[String([right, left])],
-                ),
-                0,
-            ) === left
-        ) ?
-            -1
-        :   1,
+        U.at(U.guard(rules[String([left, right])]), 0) === left ? -1 : 1,
     )
 
 const valid = (rules: Record<string, number[]>, update: number[]): boolean =>
