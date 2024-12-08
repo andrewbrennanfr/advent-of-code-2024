@@ -7,22 +7,22 @@ const parse = (input: string): number[][] =>
 
 const solve = (
     grid: number[][],
-    combine: (left: number[], right: number[], index: number) => number,
+    combine: (
+        left: number,
+        right: number,
+        arrays: [number[], number[]],
+    ) => number,
 ): number => U.sum(U.converge(grid, combine))
 
 /* --------------------------------- part01 --------------------------------- */
 
-export const part01 = (input: string): number =>
-    solve(parse(input), (left, right, index) =>
-        U.distance(U.at(index, left), U.at(index, right)),
-    )
+export const part01 = (input: string): number => solve(parse(input), U.distance)
 
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
     solve(
         parse(input),
-        (left, right, index) =>
-            U.at(index, left) *
-            U.count(right, (number) => number === U.at(index, left)),
+        (left, _, [, array]) =>
+            left * U.count(array, (number) => number === left),
     )

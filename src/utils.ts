@@ -79,9 +79,13 @@ export const clockwise = <T>(
 /** Combines arrays by applying a function to elements at each index. */
 export const converge = <T>(
     arrays: T[][],
-    combine: (left: T[], right: T[], index: number) => T,
+    combine: (left: T, right: T, arrays: [T[], T[]]) => T,
 ): T[] =>
-    arrays.reduce((left, right) => left.map(index).map(λ(combine, left, right)))
+    arrays.reduce((left, right) =>
+        left.map((__, index) =>
+            combine(at(index, left), at(index, right), [left, right]),
+        ),
+    )
 
 /** Counts the number of values in an array that satisfy a given condition. */
 export const count = <T>(
