@@ -31,12 +31,25 @@ export const _ = <T>(value: T): value is NonNullable<T> =>
 /** Returns the sum of two numbers. */
 export const add = (left: number, right: number): number => left + right
 
+/** Returns the given value as-is. */
+export const always =
+    <T>(value: T): (() => T) =>
+    // eslint-disable-next-line functional/functional-parameters
+    () =>
+        value
+
+/** Applies a function to a given list of arguments. */
+export const apply = <T, U>(
+    arguments_: T[],
+    function_: (...arguments_: T[]) => U,
+): U => function_(...arguments_)
+
 /** Returns true if an array of numbers is sorted in ascending order. */
 export const ascending = (numbers: number[]): boolean =>
     follows(numbers, (left, right) => left >= right)
 
 /** Retrieves a value from an array or throws an error if the value is not defined. */
-export const at = <T>(array: T[], index: number): NonNullable<T> =>
+export const at = <T>(index: number, array: T[]): NonNullable<T> =>
     guard(array[(index + array.length) % array.length])
 
 /** Returns true if a number is inclusively between two other numbers. */
@@ -58,7 +71,7 @@ export const clockwise = <T>(
         [first, ...grid]
     :   clockwise(
             first.map((cell, index) =>
-                [cell, ...grid.map((row) => at(row, index))].toReversed(),
+                [cell, ...grid.map(λ(at, index))].toReversed(),
             ),
             degrees - 90,
         )
@@ -109,7 +122,7 @@ export const follows = <T>(
     predicate: (left: T, right: T) => boolean,
 ): boolean =>
     array.every(
-        (value, index) => index === 0 || predicate(at(array, index - 1), value),
+        (value, index) => index === 0 || predicate(at(index - 1, array), value),
     )
 
 /** Generates a 2D grid from a string. */
@@ -155,7 +168,7 @@ export const match = (
     }))
 
 /** Returns the middle element of an array. If the array has an even length, it returns the element at the lower middle index. */
-export const middle = <T>(array: T[]): T => at(array, (array.length - 1) / 2)
+export const middle = <T>(array: T[]): T => at((array.length - 1) / 2, array)
 
 /** Returns the product of two numbers. */
 export const multiply = (left: number, right: number): number => left * right
@@ -202,6 +215,19 @@ export const path = $(
             [start]
         :   [start, ...path(direction(start), direction, moves - 1)],
 )
+
+/** Produces an array by applying a function to each pair of elements. */
+export const produce = <T>(
+    array: T[],
+    combine: (left: T, right: T, index: number) => T[],
+): T[] =>
+    array.reduce<T[]>(
+        (left, right) =>
+            left.length === 0 ?
+                [right]
+            :   left.flatMap((value, index) => combine(value, right, index)),
+        [],
+    )
 
 /** Returns the product of all numbers in an array. */
 export const product = (numbers: number[]): number =>
@@ -279,6 +305,18 @@ export const until = <T>(
 ): T[] => {
     const index = array.findIndex(predicate)
     return index === -1 ? array : subset(0, index, array)
+}
+
+/** Returns a new array containing only the unique values based on a hash. */
+export const unique = <T>(
+    array: T[],
+    hash: (value: T, index: number, array: T[]) => string = String,
+): T[] => {
+    const lookup = Object.fromEntries(
+        array.map((value, index) => [hash(value, index, array), value]),
+    )
+
+    return [...new Set(array.map(hash))].map((hash) => guard(lookup[hash]))
 }
 
 /** Returns the position west of the given position. */

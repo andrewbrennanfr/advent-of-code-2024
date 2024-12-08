@@ -89,6 +89,7 @@ export const move = (
         : guard.facing === "e" ? "s"
         : "n",
     position: U.at(
+        -1,
         U.until(getPath(guard, grid.length), (position) => {
             if (obstacles.has(getHash(position))) return true
 
@@ -96,7 +97,6 @@ export const move = (
 
             return false
         }),
-        -1,
     ),
 })
 
@@ -133,12 +133,12 @@ const getVisited = (payload: {
     grid: { cell: string; position: Record<"c" | "r", number> }[][]
     guard: { facing: string; position: Record<"c" | "r", number> }
     obstacles: Set<string>
-}): Set<string> =>
-    new Set([...navigate(payload).visited].map(U.λ(U.substring, 0, -1)))
+}): string[] =>
+    U.unique([...navigate(payload).visited].map(U.λ(U.substring, 0, -1)))
 
 /* --------------------------------- part01 --------------------------------- */
 
-export const part01 = (input: string): number => getVisited(parse(input)).size
+export const part01 = (input: string): number => getVisited(parse(input)).length
 
 /* --------------------------------- part02 --------------------------------- */
 
@@ -146,7 +146,7 @@ export const part02 = (input: string): number => {
     const { grid, guard, obstacles } = parse(input)
 
     return U.count(
-        [...getVisited({ grid, guard, obstacles })].filter(
+        getVisited({ grid, guard, obstacles }).filter(
             (hash) =>
                 hash !== getHash(U.north(guard.position)) &&
                 hash !== getHash(guard.position),

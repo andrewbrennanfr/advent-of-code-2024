@@ -14,7 +14,7 @@ const solve = (
 
 export const part01 = (input: string): number =>
     solve(parse(input), (left, right, index) =>
-        U.distance(U.at(left, index), U.at(right, index)),
+        U.distance(U.at(index, left), U.at(index, right)),
     )
 
 /* --------------------------------- part02 --------------------------------- */
@@ -23,6 +23,6 @@ export const part02 = (input: string): number =>
     solve(
         parse(input),
         (left, right, index) =>
-            U.at(left, index) *
-            U.count(right, (number) => number === U.at(left, index)),
+            U.at(index, left) *
+            U.count(right, (number) => number === U.at(index, left)),
     )
