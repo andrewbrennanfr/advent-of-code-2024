@@ -153,6 +153,12 @@ export const index = <T>(_: unknown, index: T): T => index
 /** Splits a string into an array of trimmed lines. */
 export const lines = (string: string): string[] => string.trim().split("\n")
 
+/** Calculates the Manhattan distance between two positions. */
+export const manhattan = (
+    left: Record<"c" | "r", number>,
+    right: Record<"c" | "r", number>,
+): number => distance(left.r, right.r) + distance(left.c, right.c)
+
 /** Maps each cell of a 2D grid to a new value using a function. */
 export const map2D = <T, U>(
     grid: T[][],
