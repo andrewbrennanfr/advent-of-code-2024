@@ -5,9 +5,9 @@ const parse = (
 ): {
     grid: {
         cell: string
-        position: Record<"c" | "r", number>
+        position: U.Position
     }[][]
-    guard: { facing: string; position: Record<"c" | "r", number> }
+    guard: { facing: string; position: U.Position }
     obstacles: Set<string>
 } => {
     const grid = U.map2D(U.grid(input), (cell, position) => ({
@@ -29,25 +29,22 @@ const parse = (
     }
 }
 
-const getHash = ({ c, r }: Record<"c" | "r", number>, facing = ""): string =>
+const getHash = ({ c, r }: U.Position, facing = ""): string =>
     `${r}_${c}_${facing}`
 
 const getNextDirection = ({
     facing,
 }: {
     facing: string
-    position: Record<"c" | "r", number>
-}): ((position: Record<"c" | "r", number>) => Record<"c" | "r", number>) =>
+    position: U.Position
+}): ((position: U.Position) => U.Position) =>
     facing === "n" ? U.north
     : facing === "s" ? U.south
     : facing === "e" ? U.east
     : U.west
 
 const getNextDistance = (
-    {
-        facing,
-        position: { c, r },
-    }: { facing: string; position: Record<"c" | "r", number> },
+    { facing, position: { c, r } }: { facing: string; position: U.Position },
     size: number,
 ): number =>
     facing === "n" ? r
@@ -56,16 +53,16 @@ const getNextDistance = (
     : c
 
 const getPath = (
-    guard: { facing: string; position: Record<"c" | "r", number> },
+    guard: { facing: string; position: U.Position },
     size: number,
-): Record<"c" | "r", number>[] =>
+): U.Position[] =>
     U.path(
         guard.position,
         getNextDirection(guard),
         getNextDistance(guard, size),
     )
 
-const isEdge = (position: Record<"c" | "r", number>, size: number): boolean =>
+const isEdge = (position: U.Position, size: number): boolean =>
     position.r === 0 ||
     position.c === 0 ||
     position.r === size - 1 ||
@@ -77,19 +74,18 @@ export const move = (
         guard,
         obstacles,
     }: {
-        grid: { cell: string; position: Record<"c" | "r", number> }[][]
-        guard: { facing: string; position: Record<"c" | "r", number> }
+        grid: { cell: string; position: U.Position }[][]
+        guard: { facing: string; position: U.Position }
         obstacles: Set<string>
     },
     visited: Set<string>,
-): { facing: string; position: Record<"c" | "r", number> } => ({
+): { facing: string; position: U.Position } => ({
     facing:
         guard.facing === "n" ? "e"
         : guard.facing === "s" ? "w"
         : guard.facing === "e" ? "s"
         : "n",
     position: U.at(
-        -1,
         U.until(getPath(guard, grid.length), (position) => {
             if (obstacles.has(getHash(position))) return true
 
@@ -97,6 +93,7 @@ export const move = (
 
             return false
         }),
+        -1,
     ),
 })
 
@@ -106,13 +103,13 @@ const navigate = (
         guard,
         obstacles,
     }: {
-        grid: { cell: string; position: Record<"c" | "r", number> }[][]
-        guard: { facing: string; position: Record<"c" | "r", number> }
+        grid: { cell: string; position: U.Position }[][]
+        guard: { facing: string; position: U.Position }
         obstacles: Set<string>
     },
     visited: Set<string> = new Set(),
 ): {
-    guard: { facing: string; position: Record<"c" | "r", number> }
+    guard: { facing: string; position: U.Position }
     visited: Set<string>
 } =>
     (
@@ -130,11 +127,15 @@ const navigate = (
         )
 
 const getVisited = (payload: {
-    grid: { cell: string; position: Record<"c" | "r", number> }[][]
-    guard: { facing: string; position: Record<"c" | "r", number> }
+    grid: { cell: string; position: U.Position }[][]
+    guard: { facing: string; position: U.Position }
     obstacles: Set<string>
 }): string[] =>
-    U.unique([...navigate(payload).visited].map(U.λ(U.substring, 0, -1)))
+    U.unique(
+        [...navigate(payload).visited].map((string) =>
+            U.slice(string, 0, string.length - 1),
+        ),
+    )
 
 /* --------------------------------- part01 --------------------------------- */
 

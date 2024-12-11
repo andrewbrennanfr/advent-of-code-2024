@@ -7,10 +7,10 @@ const evaluate = (number: number): number[] => {
 
     if (number === 0) return [1]
 
-    if (U.even(string.length)) {
-        const split = U.substrings(string.length / 2, string)
-        const left = Number(U.at(0, split))
-        const right = Number(U.at(1, split))
+    if (U.isEven(string.length)) {
+        const split = U.slices(string, string.length / 2)
+        const left = Number(U.at(split, 0))
+        const right = Number(U.at(split, 1))
 
         return [left, right]
     }
@@ -23,7 +23,7 @@ const solve = U.$((numbers: number[], times: number): number => {
 
     if (numbers.length === 1)
         return U.sum(
-            evaluate(U.at(0, numbers)).map((number) =>
+            evaluate(U.at(numbers, 0)).map((number) =>
                 solve([number], times - 1),
             ),
         )

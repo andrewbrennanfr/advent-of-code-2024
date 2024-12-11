@@ -2,11 +2,7 @@ import * as U from "@/utils"
 
 const solve = (
     grid: string[][],
-    evaluate: (
-        cell: string,
-        position: Record<"c" | "r", number>,
-        grid: string[][],
-    ) => number,
+    evaluate: (cell: string, position: U.Position, grid: string[][]) => number,
     degrees = 0,
 ): number =>
     degrees === 360 ? 0 : (
@@ -25,7 +21,7 @@ export const part01 = (input: string): number =>
                     U.string(
                         U.path(position, direction, 3)
                             .map(U.λ(U.cell, grid))
-                            .filter(U._),
+                            .filter(U.isDefined),
                     ) === "XMAS",
             )
         :   0,
@@ -43,7 +39,9 @@ export const part02 = (input: string): number =>
                 ].every(
                     (positions) =>
                         U.string(
-                            positions.map(U.λ(U.cell, grid)).filter(U._),
+                            positions
+                                .map(U.λ(U.cell, grid))
+                                .filter(U.isDefined),
                         ) === "MAS",
                 ),
             )

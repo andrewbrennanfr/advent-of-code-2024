@@ -23,6 +23,7 @@ export default [
             "no-ternary": "off",
             "sort-imports": "off",
             "unicorn/no-array-callback-reference": "off",
+            "unicorn/no-array-method-this-argument": "off",
             "unicorn/no-array-reduce": "off",
             "unicorn/no-nested-ternary": "off",
             "unicorn/no-unreadable-array-destructuring": "off",

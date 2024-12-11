@@ -26,18 +26,18 @@ const parse = (
     }
 }
 
-const getHash = ({ c, r }: Record<"c" | "r", number>): string => `${r}_${c}`
+const getHash = ({ c, r }: U.Position): string => `${r}_${c}`
 
-const getPosition = (hash: string): Record<"c" | "r", number> => ({
-    c: Number(U.at(-1, hash.split("_"))),
-    r: Number(U.at(0, hash.split("_"))),
+const getPosition = (hash: string): U.Position => ({
+    c: Number(U.last(hash.split("_"))),
+    r: Number(U.first(hash.split("_"))),
 })
 
 const getLeftAntiNodes = (
-    left: Record<"c" | "r", number>,
-    right: Record<"c" | "r", number>,
+    left: U.Position,
+    right: U.Position,
     grid: string[][],
-): Record<"c" | "r", number>[] => {
+): U.Position[] => {
     const rowTransition = right.r - left.r
     const colTransition = right.c - left.c
 
@@ -46,16 +46,16 @@ const getLeftAntiNodes = (
         r: left.r - rowTransition,
     }
 
-    if (!U._(U.cell(grid, nextLeft))) return []
+    if (!U.isDefined(U.cell(grid, nextLeft))) return []
 
     return [nextLeft, ...getLeftAntiNodes(nextLeft, left, grid)]
 }
 
 const getRightAntiNodes = (
-    left: Record<"c" | "r", number>,
-    right: Record<"c" | "r", number>,
+    left: U.Position,
+    right: U.Position,
     grid: string[][],
-): Record<"c" | "r", number>[] => {
+): U.Position[] => {
     const rowTransition = right.r - left.r
     const colTransition = right.c - left.c
 
@@ -64,24 +64,21 @@ const getRightAntiNodes = (
         r: right.r + rowTransition,
     }
 
-    if (!U._(U.cell(grid, nextRight))) return []
+    if (!U.isDefined(U.cell(grid, nextRight))) return []
 
     return [nextRight, ...getRightAntiNodes(right, nextRight, grid)]
 }
 
 const solve = (
     antennas: Record<string, Set<string>>,
-    getAntiNodes: (
-        left: Record<"c" | "r", number>,
-        right: Record<"c" | "r", number>,
-    ) => Record<"c" | "r", number>[],
+    getAntiNodes: (left: U.Position, right: U.Position) => U.Position[],
 ): number =>
     U.unique(
         Object.values(antennas).flatMap((antennas) =>
             [...antennas]
                 .map(getPosition)
                 .flatMap((position, index, positions) =>
-                    U.subset(index + 1, positions.length, positions).flatMap(
+                    U.subset(positions, index + 1, positions.length).flatMap(
                         U.λ(getAntiNodes, position),
                     ),
                 ),
@@ -96,7 +93,7 @@ export const part01 = (input: string): number => {
 
     return solve(antennas, (left, right) =>
         [getLeftAntiNodes, getRightAntiNodes].flatMap((getAntiNode) =>
-            U.subset(0, 1, getAntiNode(left, right, grid)),
+            U.subset(getAntiNode(left, right, grid), 0, 1),
         ),
     )
 }
@@ -108,10 +105,7 @@ export const part02 = (input: string): number => {
 
     return solve(
         antennas,
-        (
-            left: Record<"c" | "r", number>,
-            right: Record<"c" | "r", number>,
-        ): Record<"c" | "r", number>[] => [
+        (left: U.Position, right: U.Position): U.Position[] => [
             ...getLeftAntiNodes(left, right, grid),
             left,
             right,

@@ -1,4 +1,10 @@
-/** Partially applies arguments to a function, returning a new function with the remaining arguments. */
+export type Flip<T extends unknown[]> =
+    T extends [infer U, ...infer V] ? [...Flip<V>, U] : []
+
+export type Position = Record<"c" | "r", number>
+
+/* -------------------------------------------------------------------------- */
+
 export const λ =
     <T extends unknown[], U extends unknown[], V>(
         function_: (...arguments_: [...T, ...U]) => V,
@@ -7,14 +13,13 @@ export const λ =
     (...remaining) =>
         function_(...partial, ...remaining)
 
-/** Caches the results of a function based on a hash of its arguments. */
 export const $ =
     <T extends unknown[], U>(
         function_: (...arguments_: T) => U,
         hash: (arguments_: T) => string = (arguments_) =>
-            JSON.stringify(
-                arguments_.map((argument) =>
-                    typeof argument === "function" && argument.name ?
+            stringify(
+                map(arguments_, (argument) =>
+                    argument instanceof Function && "name" in argument ?
                         argument.name
                     :   argument,
                 ),
@@ -24,300 +29,344 @@ export const $ =
     (...arguments_) =>
         (cache[hash(arguments_)] ??= function_(...arguments_)) // eslint-disable-line functional/immutable-data
 
-/** Returns true if a value is defined. */
-export const _ = <T>(value: T): value is NonNullable<T> =>
-    value !== null && value !== undefined // eslint-disable-line no-undefined
+export const _ =
+    <T extends unknown[], U>(
+        function_: (...arguments_: T) => U,
+    ): ((...arguments_: Flip<T>) => U) =>
+    (...arguments_: Flip<T>) =>
+        function_(...(reverse(subset(arguments_, 0, function_.length)) as T))
 
-/** Returns the sum of two numbers. */
 export const add = (left: number, right: number): number => left + right
 
-/** Returns the given value as-is. */
 export const always =
     <T>(value: T): (() => T) =>
     // eslint-disable-next-line functional/functional-parameters
     () =>
         value
 
-/** Applies a function to a given list of arguments. */
 export const apply = <T, U>(
-    arguments_: T[],
     function_: (...arguments_: T[]) => U,
+    arguments_: T[],
 ): U => function_(...arguments_)
 
-/** Returns true if an array of numbers is sorted in ascending order. */
-export const ascending = (numbers: number[]): boolean =>
-    follows(numbers, (left, right) => left >= right)
+export const array = <T>(size: number, iteratee: (index: number) => T): T[] =>
+    map(Array.from({ length: size }, index), iteratee)
 
-/** Retrieves a value from an array or throws an error if the value is not defined. */
-export const at = <T>(index: number, array: T[]): NonNullable<T> =>
-    guard(array[(index + array.length) % array.length])
+export const at = <T>(array: T[], index: number): NonNullable<T> =>
+    guard(array[modulus(add(index, length(array)), length(array))])
 
-/** Returns true if a number is inclusively between two other numbers. */
-export const between = (left: number, number: number, right: number): boolean =>
-    (left <= number && number <= right) || (right <= number && number <= left)
+export const c = (position: Position): Position["c"] => property(position, "c")
 
-/** Returns the value at a specific position in a 2D grid. */
-export const cell = <T>(
-    grid: T[][],
-    { c, r }: Record<"c" | "r", number>,
-): T | undefined => grid[r]?.[c]
+export const cell = <T>(grid: T[][], { c, r }: Position): T | undefined =>
+    grid[r]?.[c]
 
-/** Rotates a 2D array clockwise by a specified degree. */
-export const clockwise = <T>(
-    [first = [], ...grid]: T[][],
-    degrees = 90,
-): T[][] =>
-    degrees <= 0 ?
-        [first, ...grid]
-    :   clockwise(
-            first.map((cell, index) =>
-                [cell, ...grid.map(λ(at, index))].toReversed(),
+export const clockwise = <T>(grid: T[][], degrees = 90): T[][] =>
+    isEqual(degrees, 0) ? grid : (
+        clockwise(
+            map(first(grid), (cell, index) =>
+                reverse([cell, ...map(without(grid, 0), λ(_(at), index))]),
             ),
-            degrees - 90,
+            subtract(degrees, 90),
         )
+    )
 
-/** Combines arrays by applying a function to elements at each index. */
 export const converge = <T>(
     arrays: T[][],
     combine: (left: T, right: T, arrays: [T[], T[]]) => T,
 ): T[] =>
-    arrays.reduce((left, right) =>
-        left.map((__, index) =>
-            combine(at(index, left), at(index, right), [left, right]),
-        ),
+    reduce(
+        tail(arrays),
+        (left, right) =>
+            map(left, (_, index) =>
+                combine(at(left, index), at(right, index), [left, right]),
+            ),
+        first(arrays),
     )
 
-/** Counts the number of values in an array that satisfy a given condition. */
 export const count = <T>(
     array: T[],
     predicate: (value: T, index: number, array: T[]) => boolean,
-): number => array.filter(predicate).length
+): number => length(filter(array, predicate))
 
-/** Returns the diagonal positions relative to a 2D grid position. */
 export const cousins = (
-    position: Record<"c" | "r", number>,
-): Record<
-    "northEast" | "northWest" | "southEast" | "southWest",
-    Record<"c" | "r", number>
-> => ({
+    position: Position,
+): Record<"northEast" | "northWest" | "southEast" | "southWest", Position> => ({
     northEast: northEast(position),
     northWest: northWest(position),
     southEast: southEast(position),
     southWest: southWest(position),
 })
 
-/** Returns true if an array of numbers is sorted in descending order. */
-export const descending = (numbers: number[]): boolean =>
-    ascending(numbers.toReversed())
-
-/** Returns the absolute difference between two numbers. */
 export const distance = (left: number, right: number): number =>
-    Math.abs(left - right)
+    Math.abs(subtract(left, right))
 
-/** Returns the position east of the given position. */
-export const east = ({
-    c,
-    r,
-}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c: c + 1, r })
+export const divide = (left: number, right: number): number => left / right
 
-export const even = (number: number): boolean => number % 2 === 0
+export const east = ({ c, r }: Position): Position => ({ c: add(c, 1), r })
 
-/** Returns true if each value in an array satisfies a predicate with its predecessor. */
-export const follows = <T>(
+export const every = <T>(
     array: T[],
-    predicate: (left: T, right: T) => boolean,
-): boolean =>
-    array.every(
-        (value, index) => index === 0 || predicate(at(index - 1, array), value),
-    )
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): boolean => array.every(predicate)
 
-/** Generates a 2D grid from a string. */
+export const filter = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): T[] => array.filter(predicate)
+
+export const find = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): T | undefined => array.find(predicate)
+
+export const findIndex = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): number => array.findIndex(predicate)
+
+export const first = <T>(array: T[]): T => at(array, 0)
+
+export const flat = <T>(grid: T[][]): T[] => grid.flat()
+
+export const flatMap = <T, U>(
+    array: T[],
+    iteratee: (value: T, index: number, array: T[]) => U[],
+): U[] => array.flatMap(iteratee)
+
+export const fromEntries = <T>(entries: [string, T][]): Record<string, T> =>
+    Object.fromEntries(entries)
+
 export const grid = (
     string: string,
     separator: RegExp | string = "",
-): string[][] => lines(string).map((line) => line.split(separator))
+): string[][] => map(lines(string), λ(_(split), separator))
 
-/** Ensures a value is not null or undefined, throwing an error if the check fails. */
 export const guard = <T>(value: T): NonNullable<T> =>
-    _(value) ? value : panic(`${String(value)} did not pass guard!`)
+    isDefined(value) ? value : panic(`${String(value)} did not pass guard!`)
 
-/** Checks if an array contains a specific value. */
-export const included = <T>(array: T[], value: T): boolean =>
-    array.includes(value)
+export const half = (number: number): number => divide(number, 2)
 
-/** Checks if a value is present in an array. */
-export const includes = <T>(value: T, array: T[]): boolean =>
-    included(array, value)
+export const head = <T>(array: T[]): T[] =>
+    without(array, subtract(length(array), 1))
 
-/** Returns the second argument, ignoring the first. */
 export const index = <T>(_: unknown, index: T): T => index
 
-/** Splits a string into an array of trimmed lines. */
-export const lines = (string: string): string[] => string.trim().split("\n")
+export const isAscending = (numbers: number[]): boolean =>
+    isFollowing(numbers, isGreaterEqual)
 
-/** Calculates the Manhattan distance between two positions. */
-export const manhattan = (
-    left: Record<"c" | "r", number>,
-    right: Record<"c" | "r", number>,
-): number => distance(left.r, right.r) + distance(left.c, right.c)
+export const isBetween = (
+    left: number,
+    number: number,
+    right: number,
+): boolean =>
+    (isLessEqual(left, number) && isLessEqual(number, right)) ||
+    (isLessEqual(right, number) && isLessEqual(number, left))
 
-/** Maps each cell of a 2D grid to a new value using a function. */
-export const map2D = <T, U>(
-    grid: T[][],
-    iteratee: (cell: T, position: Record<"c" | "r", number>, grid: T[][]) => U,
-): U[][] =>
-    grid.map((row, r) => row.map((cell, c) => iteratee(cell, { c, r }, grid)))
+export const isDefined = <T>(value: T): value is NonNullable<T> =>
+    isNot(isEqual)(value, null) && isNot(isEqual)(value, undefined) // eslint-disable-line no-undefined, unicorn/no-null, unicorn/no-useless-undefined
 
-/** Returns all matches of a regex in a string as an array. */
-export const match = (
-    string: string,
-    regex: RegExp,
-): (Omit<RegExpExecArray, "groups"> &
-    Required<Pick<RegExpExecArray, "groups">>)[] =>
-    [...string.matchAll(regex)].map(({ groups, ...match }) => ({
-        ...match,
-        groups: { ...groups },
-    }))
+export const isDescending = (numbers: number[]): boolean =>
+    isAscending(reverse(numbers))
 
-/** Returns the middle element of an array. If the array has an even length, it returns the element at the lower middle index. */
-export const middle = <T>(array: T[]): T => at((array.length - 1) / 2, array)
+export const isEqual = <T>(left: T, right: T): boolean => left === right
 
-/** Returns the product of two numbers. */
-export const multiply = (left: number, right: number): number => left * right
+export const isEven = (number: number): boolean => isZero(modulus(number, 2))
 
-/** Returns the position north of the given position. */
-export const north = ({
-    c,
-    r,
-}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c, r: r - 1 })
+export const isFollowing = <T>(
+    array: T[],
+    predicate: (left: T, right: T) => boolean,
+): boolean =>
+    every(
+        array,
+        (value, index) =>
+            isZero(index) || predicate(at(array, subtract(index, 1)), value),
+    )
 
-/** Returns the position northeast of the given position. */
-export const northEast = (
-    position: Record<"c" | "r", number>,
-): Record<"c" | "r", number> => north(east(position))
+export const isGreater = <T>(left: T, right: T): boolean => left > right
 
-/** Returns the position northwest of the given position. */
-export const northWest = (
-    position: Record<"c" | "r", number>,
-): Record<"c" | "r", number> => north(west(position))
+export const isGreaterEqual = <T>(left: T, right: T): boolean =>
+    isGreater(left, right) || isEqual(left, right)
 
-/** Returns a function that negates the result of the provided predicate. */
-export const not =
+export const isIncluded = <T>(array: T[], value: T): boolean =>
+    array.includes(value)
+
+export const isLess = <T>(left: T, right: T): boolean => left < right
+
+export const isLessEqual = <T>(left: T, right: T): boolean =>
+    isLess(left, right) || isEqual(left, right)
+
+export const isNot =
     <T extends unknown[]>(
         predicate: (...arguments_: T) => boolean,
     ): ((...arguments_: T) => boolean) =>
     (...arguments_) =>
         !predicate(...arguments_)
 
-export const odd = not(even)
+export const isOdd = (number: number): boolean => isNot(isEven)(number)
 
-/** Throws an error with the specified message. */
+export const isZero = (number: number): boolean => isEqual(number, 0)
+
+export const int = (value: unknown): number => Number(value) // eslint-disable-line functional/prefer-tacit, unicorn/prefer-native-coercion-functions
+
+export const join = (array: (number | string)[], separator = ""): string =>
+    array.join(separator)
+
+export const last = <T>(array: T[]): T => at(array, -1)
+
+export const lastIndexOf = (string: string, value: string): number =>
+    string.lastIndexOf(value)
+
+export const length = (value: string | unknown[]): number => value.length
+
+export const lines = (string: string): string[] => split(trim(string), "\n")
+
+export const manhattan = (left: Position, right: Position): number =>
+    add(distance(r(left), r(right)), distance(c(left), c(right)))
+
+export const map = <T, U>(
+    array: T[],
+    iteratee: (value: T, index: number, array: T[]) => U,
+): U[] => array.map(iteratee)
+
+export const map2D = <T, U>(
+    grid: T[][],
+    iteratee: (cell: T, position: Position, grid: T[][]) => U,
+): U[][] =>
+    map(grid, (row, r) => map(row, (cell, c) => iteratee(cell, { c, r }, grid)))
+
+export const match = (
+    string: string,
+    regex: RegExp,
+): (Omit<RegExpExecArray, "groups"> &
+    Required<Pick<RegExpExecArray, "groups">>)[] =>
+    map([...string.matchAll(regex)], ({ groups, ...match }) => ({
+        ...match,
+        groups: { ...groups },
+    }))
+
+export const middle = <T>(array: T[]): T =>
+    at(array, half(subtract(length(array), 1)))
+
+export const modulus = (left: number, right: number): number => left % right
+
+export const multiply = (left: number, right: number): number => left * right
+
+export const north = ({ c, r }: Position): Position => ({
+    c,
+    r: subtract(r, 1),
+})
+
+export const northEast = (position: Position): Position => north(east(position))
+
+export const northWest = (position: Position): Position => north(west(position))
+
+export const order = <T>(array: T[]): T[] => sort(array)
+
 export const panic = (message: string): never => {
     throw new Error(message) // eslint-disable-line functional/no-throw-statements
 }
 
-/** Generates a sequence of positions in a given direction. */
 export const path = $(
     (
-        start: Record<"c" | "r", number>,
-        direction: (
-            position: Record<"c" | "r", number>,
-        ) => Record<"c" | "r", number>,
+        start: Position,
+        direction: (position: Position) => Position,
         moves: number,
-    ): Record<"c" | "r", number>[] =>
-        moves === 0 ?
+    ): Position[] =>
+        isZero(moves) ?
             [start]
-        :   [start, ...path(direction(start), direction, moves - 1)],
+        :   [start, ...path(direction(start), direction, subtract(moves, 1))],
 )
 
-/** Produces an array by applying a function to each pair of elements. */
 export const produce = <T>(
     array: T[],
-    combine: (left: T, right: T, index: number) => T[],
+    producer: (left: T, right: T, index: number) => T[],
 ): T[] =>
-    array.reduce<T[]>(
+    reduce(
+        array,
         (left, right) =>
-            left.length === 0 ?
+            isZero(length(left)) ?
                 [right]
-            :   left.flatMap((value, index) => combine(value, right, index)),
-        [],
+            :   flatMap(left, (value, index) => producer(value, right, index)),
+        [] as T[],
     )
 
-/** Returns the product of all numbers in an array. */
 export const product = (numbers: number[]): number =>
-    numbers.reduce(multiply, Number(numbers.length > 0))
+    reduce(numbers, multiply, int(isGreater(length(numbers), 0)))
 
-/** Returns the adjacent positions of a given position in a 2D grid. */
+export const property = <T>(object: Record<string, T>, key: string): T =>
+    guard(object[key])
+
+export const r = (position: Position): Position["r"] => property(position, "r")
+
+export const reduce = <T, U>(
+    array: T[],
+    reducer: (left: U, right: T, index: number, array: T[]) => U, // eslint-disable-line @typescript-eslint/max-params
+    left: U,
+): U => array.reduce(reducer, left)
+
+export const reverse = <T>(array: T[]): T[] => array.toReversed()
+
 export const siblings = (
-    position: Record<"c" | "r", number>,
-): Record<"east" | "north" | "south" | "west", Record<"c" | "r", number>> => ({
+    position: Position,
+): Record<"east" | "north" | "south" | "west", Position> => ({
     east: east(position),
     north: north(position),
     south: south(position),
     west: west(position),
 })
 
-/** Extracts a portion of an array between specified start and end indices. */
-export const subset = <T>(start: number, end: number, array: T[]): T[] =>
-    array.slice(start, end)
+export const slice = (string: string, start: number, size: number): string =>
+    string.slice(start, start + size)
 
-/** Extracts portions of an array up to a given size. */
-export const subsets = <T>(size: number, array: T[]): T[][] =>
-    array.length <= size ?
-        [array]
-    :   [
-            subset(0, size, array),
-            ...subsets(size, subset(size, array.length, array)),
-        ]
-
-/** Extracts a portion of a string between specified start and end indices. */
-export const substring = (start: number, end: number, string: string): string =>
-    string.slice(start, end)
-
-/** Extracts portions of a string up to a given size. */
-export const substrings = (size: number, string: string): string[] =>
-    string.length <= size ?
+export const slices = (string: string, size: number): string[] =>
+    isLessEqual(length(string), size) ?
         [string]
     :   [
-            substring(0, size, string),
-            ...substrings(size, substring(size, string.length, string)),
+            slice(string, 0, size),
+            ...slices(
+                slice(string, size, subtract(length(string), size)),
+                size,
+            ),
         ]
 
-/** Sorts an array using a comparison function. */
+export const some = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): boolean => array.some(predicate)
+
 export const sort = <T>(
     array: T[],
     compare: (left: T, right: T) => number = (left, right) =>
-        left < right ? -1
-        : right > left ? 1
+        isLess(left, right) ? -1
+        : isGreater(right, left) ? 1
         : 0,
 ): T[] => array.toSorted(compare)
 
-/** Returns the position south of the given position. */
-export const south = ({
-    c,
-    r,
-}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c, r: r + 1 })
+export const south = ({ c, r }: Position): Position => ({ c, r: add(r, 1) })
 
-/** Returns the position southeast of the given position. */
-export const southEast = (
-    position: Record<"c" | "r", number>,
-): Record<"c" | "r", number> => south(east(position))
+export const southEast = (position: Position): Position => south(east(position))
 
-/** Returns the position southwest of the given position. */
-export const southWest = (
-    position: Record<"c" | "r", number>,
-): Record<"c" | "r", number> => south(west(position))
+export const southWest = (position: Position): Position => south(west(position))
 
-/** Concatenates an array of strings into a single string without any separator. */
-export const string = <T extends number | string>(values: T[]): string =>
-    values.join("")
+export const split = (string: string, separator: RegExp | string): string[] =>
+    string.split(separator)
 
-/** Returns the sum of all numbers in an array. */
-export const sum = (numbers: number[]): number => numbers.reduce(add, 0)
+export const subset = <T>(array: T[], start: number, size: number): T[] =>
+    array.slice(start, start + size)
 
-/** Returns all surrounding positions for a given 2D grid position. */
+export const subsets = <T>(array: T[], size: number): T[][] =>
+    isLessEqual(length(array), size) ?
+        [array]
+    :   [
+            subset(array, 0, size),
+            ...subsets(
+                subset(array, size, subtract(length(array), size)),
+                size,
+            ),
+        ]
+
 export const surrounding = (
-    position: Record<"c" | "r", number>,
+    position: Position,
 ): Record<
     | "east"
     | "north"
@@ -327,38 +376,49 @@ export const surrounding = (
     | "southEast"
     | "southWest"
     | "west",
-    Record<"c" | "r", number>
+    Position
 > => ({ ...cousins(position), ...siblings(position) })
 
-/** Extracts a portion of an array up to the first element that satisfies a predicate. */
-export const until = <T>(
-    array: T[],
-    predicate: (value: T, index: number, array: T[]) => boolean,
-): T[] => {
-    const index = array.findIndex(predicate)
-    return index === -1 ? array : subset(0, index, array)
-}
+export const string = <T extends number | string>(value: T | T[]): string =>
+    Array.isArray(value) ? join(value) : String(value)
 
-/** Returns a new array containing only the unique values based on a hash. */
+export const stringify = (...arguments_: unknown[]): string =>
+    JSON.stringify(arguments_)
+
+export const subtract = (left: number, right: number): number => left - right
+
+export const sum = (numbers: number[]): number => reduce(numbers, add, 0)
+
+export const tail = <T>(array: T[]): T[] => without(array, 0)
+
+export const trim = (string: string): string => string.trim()
+
 export const unique = <T>(
     array: T[],
     hash: (value: T, index: number, array: T[]) => string = String,
 ): T[] => {
-    const lookup = Object.fromEntries(
-        array.map((value, index) => [hash(value, index, array), value]),
+    const lookup = fromEntries(
+        map(array, (value, index) => [hash(value, index, array), value]),
     )
 
-    return [...new Set(array.map(hash))].map((hash) => guard(lookup[hash]))
+    return map([...new Set(map(array, hash))], λ(property, lookup))
 }
 
-/** Returns the position west of the given position. */
-export const west = ({
-    c,
-    r,
-}: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c: c - 1, r })
+export const until = <T>(
+    array: T[],
+    predicate: (value: T, index: number, array: T[]) => boolean,
+): T[] => {
+    const index = findIndex(array, predicate)
+    return isEqual(index, -1) ? array : subset(array, 0, index)
+}
 
-/** Removes the value at the specified index from an array. */
+export const values = <T>(
+    ...arguments_: Parameters<typeof Object.values<T>>
+): T[] => Object.values(...arguments_)
+
+export const west = ({ c, r }: Position): Position => ({ c: subtract(c, 1), r })
+
 export const without = <T>(array: T[], index: number): T[] => [
-    ...subset(0, index, array),
-    ...subset(index + 1, array.length, array),
+    ...subset(array, 0, index),
+    ...subset(array, add(index, 1), subtract(length(array), 1)),
 ]

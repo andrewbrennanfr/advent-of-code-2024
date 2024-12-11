@@ -2,22 +2,19 @@ import * as U from "@/utils"
 
 const parse = (input: string): number[][] => U.map2D(U.grid(input), Number)
 
-const getStarts = (grid: number[][]): Record<"c" | "r", number>[] =>
+const getStarts = (grid: number[][]): U.Position[] =>
     U.map2D(grid, U.index)
         .flat()
         .filter((position) => U.cell(grid, position) === 0)
 
-const getEnds = (
-    grid: number[][],
-    position: Record<"c" | "r", number>,
-): Record<"c" | "r", number>[] => {
+const getEnds = (grid: number[][], position: U.Position): U.Position[] => {
     const current = U.guard(U.cell(grid, position))
 
     if (current === 9) return [position]
 
     const siblings = Object.values(U.siblings(position))
     const gridSiblings = siblings.filter((sibling) =>
-        U._(U.cell(grid, sibling)),
+        U.isDefined(U.cell(grid, sibling)),
     )
     const validNextSteps = gridSiblings.filter(
         (sibling) => U.cell(grid, sibling) === current + 1,

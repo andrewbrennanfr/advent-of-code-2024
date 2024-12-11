@@ -1,25 +1,31 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[][] => U.map2D(U.grid(input, " "), Number)
+const parse = (input: string): number[][] => U.map2D(U.grid(input, " "), U.int)
 
-const safe = (numbers: number[]): boolean =>
-    (U.ascending(numbers) || U.descending(numbers)) &&
-    U.follows(numbers, (left, right) =>
-        U.between(1, U.distance(left, right), 3),
+const isSafe = (numbers: number[]): boolean =>
+    (U.isAscending(numbers) || U.isDescending(numbers)) &&
+    U.isFollowing(numbers, (left, right) =>
+        U.isBetween(1, U.distance(left, right), 3),
     )
 
 const solve = (
     grid: number[][],
-    safe: (numbers: number[]) => boolean,
-): number => U.count(grid, safe)
+    isSafe: (numbers: number[]) => boolean,
+): number => U.count(grid, isSafe)
 
 /* --------------------------------- part01 --------------------------------- */
 
-export const part01 = (input: string): number => solve(parse(input), safe)
+export const part01 = (input: string): number => solve(parse(input), isSafe)
 
 /* --------------------------------- part02 --------------------------------- */
 
-export const part02 = (input: string): number =>
-    solve(parse(input), (numbers) =>
-        numbers.map(U.index).map(U.λ(U.without, numbers)).some(safe),
-    )
+export const part02 = (input: string): number => {
+    const parsed = parse(input)
+
+    return solve(parsed, (numbers) => {
+        const indexes = U.map(numbers, U.index)
+        const combinations = U.map(indexes, U.λ(U.without, numbers))
+
+        return U.some(combinations, isSafe)
+    })
+}

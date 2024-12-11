@@ -3,7 +3,7 @@ import * as U from "@/utils"
 const parse = (input: string): { amount: number; value: string }[] =>
     [...input.trim()].map(Number).map((amount, index) => ({
         amount,
-        value: U.even(index) ? String(index / 2) : ".",
+        value: U.isEven(index) ? String(index / 2) : ".",
     }))
 
 const expand = (
@@ -21,8 +21,8 @@ const move = (
 
     if (firstGapIndex > lastNumberIndex) return data
 
-    const firstGap = U.at(firstGapIndex, data)
-    const lastNumber = U.at(lastNumberIndex, data)
+    const firstGap = U.at(data, firstGapIndex)
+    const lastNumber = U.at(data, lastNumberIndex)
 
     const nextData = data.map((item, index) =>
         index === firstGapIndex ? lastNumber
@@ -37,7 +37,7 @@ const chunkedMove = (
     data: { amount: number; value: string }[],
     currentIndex = data.length - 1,
 ): { amount: number; value: string }[] => {
-    const current = U.at(currentIndex, data)
+    const current = U.at(data, currentIndex)
     const availableGapIndex = data.findIndex(
         ({ amount, value }) => value === "." && amount >= current.amount,
     )
@@ -53,7 +53,7 @@ const chunkedMove = (
     )
         return chunkedMove(data, currentIndex - 1)
 
-    const availableGap = U.at(availableGapIndex, data)
+    const availableGap = U.at(data, availableGapIndex)
 
     const nextData = data.flatMap((item, index) =>
         index === availableGapIndex ?

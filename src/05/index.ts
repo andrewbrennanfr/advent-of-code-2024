@@ -7,18 +7,18 @@ const parse = (
 
     return {
         rules: Object.fromEntries(
-            U.map2D(U.grid(U.at(0, chunks), "|"), Number).flatMap((rule) => [
+            U.map2D(U.grid(U.at(chunks, 0), "|"), Number).flatMap((rule) => [
                 [String(rule), rule],
-                [String(rule.toReversed()), rule],
+                [String(U.reverse(rule)), rule],
             ]),
         ),
-        updates: U.map2D(U.grid(U.at(1, chunks), ","), Number),
+        updates: U.map2D(U.grid(U.at(chunks, 1), ","), Number),
     }
 }
 
 const sort = (rules: Record<string, number[]>, update: number[]): number[] =>
     U.sort(update, (left, right) =>
-        U.at(0, U.guard(rules[String([left, right])])) === left ? -1 : 1,
+        U.at(U.guard(rules[String([left, right])]), 0) === left ? -1 : 1,
     )
 
 const valid = (rules: Record<string, number[]>, update: number[]): boolean =>
@@ -41,4 +41,4 @@ export const part01 = (input: string): number => solve(input, valid)
 
 /* --------------------------------- part02 --------------------------------- */
 
-export const part02 = (input: string): number => solve(input, U.not(valid))
+export const part02 = (input: string): number => solve(input, U.isNot(valid))

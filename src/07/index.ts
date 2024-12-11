@@ -10,16 +10,16 @@ const solve = (
     U.sum(
         equations
             .filter((equation) =>
-                U.included(
+                U.isIncluded(
                     U.produce(U.without(equation, 0), (left, right) =>
                         operators
-                            .map(U.λ(U.apply, [left, right]))
-                            .filter((result) => result <= U.at(0, equation)),
+                            .map(U.λ(U._(U.apply), [left, right]))
+                            .filter((result) => result <= U.at(equation, 0)),
                     ),
-                    U.at(0, equation),
+                    U.at(equation, 0),
                 ),
             )
-            .map(U.λ(U.at, 0)),
+            .map((value) => U.at(value, 0)),
     )
 
 /* --------------------------------- part01 --------------------------------- */
