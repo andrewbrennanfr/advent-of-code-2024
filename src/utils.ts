@@ -120,6 +120,8 @@ export const east = ({
     r,
 }: Record<"c" | "r", number>): Record<"c" | "r", number> => ({ c: c + 1, r })
 
+export const even = (number: number): boolean => number % 2 === 0
+
 /** Returns true if each value in an array satisfies a predicate with its predecessor. */
 export const follows = <T>(
     array: T[],
@@ -206,6 +208,8 @@ export const not =
     ): ((...arguments_: T) => boolean) =>
     (...arguments_) =>
         !predicate(...arguments_)
+
+export const odd = not(even)
 
 /** Throws an error with the specified message. */
 export const panic = (message: string): never => {
