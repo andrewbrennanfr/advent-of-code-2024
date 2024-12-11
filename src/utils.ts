@@ -261,9 +261,27 @@ export const siblings = (
 export const subset = <T>(start: number, end: number, array: T[]): T[] =>
     array.slice(start, end)
 
+/** Extracts portions of an array up to a given size. */
+export const subsets = <T>(size: number, array: T[]): T[][] =>
+    array.length <= size ?
+        [array]
+    :   [
+            subset(0, size, array),
+            ...subsets(size, subset(size, array.length, array)),
+        ]
+
 /** Extracts a portion of a string between specified start and end indices. */
 export const substring = (start: number, end: number, string: string): string =>
     string.slice(start, end)
+
+/** Extracts portions of a string up to a given size. */
+export const substrings = (size: number, string: string): string[] =>
+    string.length <= size ?
+        [string]
+    :   [
+            substring(0, size, string),
+            ...substrings(size, substring(size, string.length, string)),
+        ]
 
 /** Sorts an array using a comparison function. */
 export const sort = <T>(
