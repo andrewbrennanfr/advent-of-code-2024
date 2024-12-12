@@ -3,7 +3,7 @@ import * as U from "@/utils"
 const parse = (
     input: string,
 ): { antennas: Record<string, Set<string>>; grid: string[][] } => {
-    const grid = U.grid(input)
+    const grid = U.grid(input, "")
     const positions = U.map2D(grid, U.index)
 
     return {

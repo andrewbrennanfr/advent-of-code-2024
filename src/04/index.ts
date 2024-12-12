@@ -13,7 +13,7 @@ const solve = (
 /* --------------------------------- part01 --------------------------------- */
 
 export const part01 = (input: string): number =>
-    solve(U.grid(input), (cell, position, grid) =>
+    solve(U.grid(input, ""), (cell, position, grid) =>
         cell === "X" ?
             U.count(
                 [U.east, U.southEast],
@@ -30,7 +30,7 @@ export const part01 = (input: string): number =>
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
-    solve(U.grid(input), (cell, position, grid) =>
+    solve(U.grid(input, ""), (cell, position, grid) =>
         cell === "A" ?
             Number(
                 [

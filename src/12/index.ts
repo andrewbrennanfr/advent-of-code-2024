@@ -1,6 +1,6 @@
 import * as U from "@/utils"
 
-const parse = (input: string): string[][] => U.grid(input)
+const parse = (input: string): string[][] => U.grid(input, "")
 
 const getPositionHash = (position: U.Position): string =>
     U.join([U.r(position), U.c(position)], "_")

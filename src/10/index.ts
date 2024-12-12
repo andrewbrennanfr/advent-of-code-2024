@@ -1,6 +1,6 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[][] => U.map2D(U.grid(input), Number)
+const parse = (input: string): number[][] => U.map2D(U.grid(input, ""), Number)
 
 const getStarts = (grid: number[][]): U.Position[] =>
     U.map2D(grid, U.index)

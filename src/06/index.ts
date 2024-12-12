@@ -10,7 +10,7 @@ const parse = (
     guard: { facing: string; position: U.Position }
     obstacles: Set<string>
 } => {
-    const grid = U.map2D(U.grid(input), (cell, position) => ({
+    const grid = U.map2D(U.grid(input, ""), (cell, position) => ({
         cell,
         position,
     }))

@@ -45,7 +45,7 @@ export default [
             "id-length": [
                 "error",
                 {
-                    exceptions: ["λ", "_", "$", "c", "r", "U"],
+                    exceptions: ["λ", "_", "$", "c", "l", "r", "U"],
                 },
             ],
             "no-restricted-syntax": [

@@ -1,6 +1,11 @@
 export type Flip<T extends unknown[]> =
     T extends [infer U, ...infer V] ? [...Flip<V>, U] : []
 
+export type Pipe<T extends unknown[]> = {
+    l: <U>(function_: (...arguments_: T) => U) => Pipe<[U]>
+    return: () => T[0]
+}
+
 export type Position = Record<"c" | "r", number>
 
 /* -------------------------------------------------------------------------- */
@@ -136,10 +141,8 @@ export const flatMap = <T, U>(
 export const fromEntries = <T>(entries: [string, T][]): Record<string, T> =>
     Object.fromEntries(entries)
 
-export const grid = (
-    string: string,
-    separator: RegExp | string = "",
-): string[][] => map(lines(string), λ(_(split), separator))
+export const grid = (string: string, separator: RegExp | string): string[][] =>
+    map(lines(string), λ(_(split), separator))
 
 export const guard = <T>(value: T): NonNullable<T> =>
     isDefined(value) ? value : panic(`${String(value)} did not pass guard!`)
@@ -210,6 +213,11 @@ export const int = (value: unknown): number => Number(value) // eslint-disable-l
 
 export const join = (array: (number | string)[], separator = ""): string =>
     array.join(separator)
+
+export const l = <T extends unknown[]>(...arguments_: T): Pipe<T> => ({
+    l: (function_) => l(function_(...arguments_)),
+    return: () => arguments_[0], // eslint-disable-line functional/functional-parameters
+})
 
 export const last = <T>(array: T[]): T => at(array, -1)
 
