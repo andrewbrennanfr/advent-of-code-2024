@@ -24,13 +24,10 @@ const move = (
     const firstGap = U.at(data, firstGapIndex)
     const lastNumber = U.at(data, lastNumberIndex)
 
-    const nextData = data.map((item, index) =>
-        index === firstGapIndex ? lastNumber
-        : index === lastNumberIndex ? firstGap
-        : item,
-    )
+    data[firstGapIndex] = lastNumber // eslint-disable-line functional/immutable-data, functional/no-expression-statements
+    data[lastNumberIndex] = firstGap // eslint-disable-line functional/immutable-data, functional/no-expression-statements
 
-    return move(nextData)
+    return move(data)
 }
 
 const chunkedMove = (
