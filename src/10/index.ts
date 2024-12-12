@@ -1,28 +1,27 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[][] => U.map2D(U.grid(input, ""), Number)
+const parse = (input: string): U.Grid<number> => U.map2D(U.grid(input), Number)
 
-const getStarts = (grid: number[][]): U.Position[] =>
-    U.map2D(grid, U.index)
+const getStarts = (grid: U.Grid<number>): U.Position[] =>
+    U.map2D(grid, (_, index) => index)
         .flat()
         .filter((position) => U.cell(grid, position) === 0)
 
-const getEnds = (grid: number[][], position: U.Position): U.Position[] => {
+const getEnds = (grid: U.Grid<number>, position: U.Position): U.Position[] => {
     const current = U.guard(U.cell(grid, position))
 
     if (current === 9) return [position]
 
-    const siblings = Object.values(U.siblings(position))
-    const gridSiblings = siblings.filter((sibling) =>
-        U.isDefined(U.cell(grid, sibling)),
+    const siblings = Object.values(U.siblings(position)).filter((sibling) =>
+        U.defined(U.cell(grid, sibling)),
     )
-    const validNextSteps = gridSiblings.filter(
+    const nextSiblings = siblings.filter(
         (sibling) => U.cell(grid, sibling) === current + 1,
     )
 
-    if (validNextSteps.length === 0) return []
+    if (nextSiblings.length === 0) return []
 
-    return validNextSteps.flatMap(U.λ(getEnds, grid))
+    return nextSiblings.flatMap((sibling) => getEnds(grid, sibling))
 }
 
 /* --------------------------------- part01 --------------------------------- */
@@ -30,12 +29,10 @@ const getEnds = (grid: number[][], position: U.Position): U.Position[] => {
 export const part01 = (input: string): number => {
     const grid = parse(input)
 
-    const bounds = getStarts(grid).flatMap((start) =>
-        getEnds(grid, start).map((end) => ({ end, start })),
-    )
-
     return U.unique(
-        bounds,
+        getStarts(grid).flatMap((start) =>
+            getEnds(grid, start).map((end) => ({ end, start })),
+        ),
         ({ end, start }) => `${start.r}_${start.c}_${end.r}_${end.c}`,
     ).length
 }
@@ -45,5 +42,5 @@ export const part01 = (input: string): number => {
 export const part02 = (input: string): number => {
     const grid = parse(input)
 
-    return getStarts(grid).flatMap(U.λ(getEnds, grid)).length
+    return getStarts(grid).flatMap((position) => getEnds(grid, position)).length
 }

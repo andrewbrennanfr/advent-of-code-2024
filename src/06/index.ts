@@ -3,14 +3,11 @@ import * as U from "@/utils"
 const parse = (
     input: string,
 ): {
-    grid: {
-        cell: string
-        position: U.Position
-    }[][]
+    grid: U.Grid<{ cell: string; position: U.Position }>
     guard: { facing: string; position: U.Position }
     obstacles: Set<string>
 } => {
-    const grid = U.map2D(U.grid(input, ""), (cell, position) => ({
+    const grid = U.map2D(U.grid(input), (cell, position) => ({
         cell,
         position,
     }))
@@ -32,12 +29,9 @@ const parse = (
 const getHash = ({ c, r }: U.Position, facing = ""): string =>
     `${r}_${c}_${facing}`
 
-const getNextDirection = ({
-    facing,
-}: {
-    facing: string
-    position: U.Position
-}): ((position: U.Position) => U.Position) =>
+const getNextDirection = (
+    facing: string,
+): ((position: U.Position) => U.Position) =>
     facing === "n" ? U.north
     : facing === "s" ? U.south
     : facing === "e" ? U.east
@@ -58,11 +52,11 @@ const getPath = (
 ): U.Position[] =>
     U.path(
         guard.position,
-        getNextDirection(guard),
+        getNextDirection(guard.facing),
         getNextDistance(guard, size),
     )
 
-const isEdge = (position: U.Position, size: number): boolean =>
+const edge = (position: U.Position, size: number): boolean =>
     position.r === 0 ||
     position.c === 0 ||
     position.r === size - 1 ||
@@ -74,28 +68,33 @@ export const move = (
         guard,
         obstacles,
     }: {
-        grid: { cell: string; position: U.Position }[][]
+        grid: U.Grid<{ cell: string; position: U.Position }>
         guard: { facing: string; position: U.Position }
         obstacles: Set<string>
     },
     visited: Set<string>,
-): { facing: string; position: U.Position } => ({
-    facing:
-        guard.facing === "n" ? "e"
-        : guard.facing === "s" ? "w"
-        : guard.facing === "e" ? "s"
-        : "n",
-    position: U.at(
-        U.until(getPath(guard, grid.length), (position) => {
-            if (obstacles.has(getHash(position))) return true
+): { facing: string; position: U.Position } => {
+    const path = getPath(guard, grid.length)
+    const obstacleIndex = path.findIndex((position) => {
+        if (obstacles.has(getHash(position))) return true
 
-            visited.add(getHash(position, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
+        visited.add(getHash(position, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
 
-            return false
-        }),
-        -1,
-    ),
-})
+        return false
+    })
+
+    return {
+        facing:
+            guard.facing === "n" ? "e"
+            : guard.facing === "s" ? "w"
+            : guard.facing === "e" ? "s"
+            : "n",
+        position: U.at(
+            path.slice(0, obstacleIndex === -1 ? Infinity : obstacleIndex),
+            -1,
+        ),
+    }
+}
 
 const navigate = (
     {
@@ -103,7 +102,7 @@ const navigate = (
         guard,
         obstacles,
     }: {
-        grid: { cell: string; position: U.Position }[][]
+        grid: U.Grid<{ cell: string; position: U.Position }>
         guard: { facing: string; position: U.Position }
         obstacles: Set<string>
     },
@@ -114,7 +113,7 @@ const navigate = (
 } =>
     (
         visited.has(getHash(guard.position, guard.facing)) ||
-        isEdge(guard.position, grid.length)
+        edge(guard.position, grid.length)
     ) ?
         { guard, visited }
     :   navigate(
@@ -127,14 +126,12 @@ const navigate = (
         )
 
 const getVisited = (payload: {
-    grid: { cell: string; position: U.Position }[][]
+    grid: U.Grid<{ cell: string; position: U.Position }>
     guard: { facing: string; position: U.Position }
     obstacles: Set<string>
 }): string[] =>
     U.unique(
-        [...navigate(payload).visited].map((string) =>
-            U.slice(string, 0, string.length - 1),
-        ),
+        [...navigate(payload).visited].map((string) => string.slice(0, -1)),
     )
 
 /* --------------------------------- part01 --------------------------------- */
@@ -153,7 +150,7 @@ export const part02 = (input: string): number => {
                 hash !== getHash(guard.position),
         ),
         (possibleObstacle) =>
-            !isEdge(
+            !edge(
                 navigate(
                     {
                         grid,

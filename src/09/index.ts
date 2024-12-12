@@ -3,7 +3,7 @@ import * as U from "@/utils"
 const parse = (input: string): { amount: number; value: string }[] =>
     [...input.trim()].map(Number).map((amount, index) => ({
         amount,
-        value: U.isEven(index) ? String(index / 2) : ".",
+        value: U.even(index) ? String(index / 2) : ".",
     }))
 
 const expand = (

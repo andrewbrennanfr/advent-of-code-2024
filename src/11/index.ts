@@ -1,19 +1,18 @@
 import * as U from "@/utils"
 
-const parse = (input: string): number[] => input.trim().split(" ").map(Number)
+const parse = (input: string): number[] =>
+    U.at(U.grid(input, " "), 0).map(Number)
 
 const evaluate = (number: number): number[] => {
     const string = String(number)
 
     if (number === 0) return [1]
 
-    if (U.isEven(string.length)) {
-        const split = U.slices(string, string.length / 2)
-        const left = Number(U.at(split, 0))
-        const right = Number(U.at(split, 1))
-
-        return [left, right]
-    }
+    if (U.even(string.length))
+        return [
+            Number(string.slice(0, string.length / 2)),
+            Number(string.slice(string.length / 2)),
+        ]
 
     return [number * 2024]
 }

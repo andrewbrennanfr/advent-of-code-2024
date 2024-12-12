@@ -2,9 +2,9 @@ import * as U from "@/utils"
 
 const parse = (
     input: string,
-): { antennas: Record<string, Set<string>>; grid: string[][] } => {
-    const grid = U.grid(input, "")
-    const positions = U.map2D(grid, U.index)
+): { antennas: Record<string, Set<string>>; grid: U.Grid<string> } => {
+    const grid = U.grid(input)
+    const positions = U.map2D(grid, (_, index) => index)
 
     return {
         antennas: Object.fromEntries(
@@ -29,44 +29,38 @@ const parse = (
 const getHash = ({ c, r }: U.Position): string => `${r}_${c}`
 
 const getPosition = (hash: string): U.Position => ({
-    c: Number(U.last(hash.split("_"))),
-    r: Number(U.first(hash.split("_"))),
+    c: Number(U.at(hash.split("_"), -1)),
+    r: Number(U.at(hash.split("_"), 0)),
 })
 
 const getLeftAntiNodes = (
     left: U.Position,
     right: U.Position,
-    grid: string[][],
+    grid: U.Grid<string>,
 ): U.Position[] => {
-    const rowTransition = right.r - left.r
-    const colTransition = right.c - left.c
-
     const nextLeft = {
-        c: left.c - colTransition,
-        r: left.r - rowTransition,
+        c: left.c - (right.c - left.c),
+        r: left.r - (right.r - left.r),
     }
 
-    if (!U.isDefined(U.cell(grid, nextLeft))) return []
-
-    return [nextLeft, ...getLeftAntiNodes(nextLeft, left, grid)]
+    return U.defined(U.cell(grid, nextLeft)) ?
+            [nextLeft, ...getLeftAntiNodes(nextLeft, left, grid)]
+        :   []
 }
 
 const getRightAntiNodes = (
     left: U.Position,
     right: U.Position,
-    grid: string[][],
+    grid: U.Grid<string>,
 ): U.Position[] => {
-    const rowTransition = right.r - left.r
-    const colTransition = right.c - left.c
-
     const nextRight = {
-        c: right.c + colTransition,
-        r: right.r + rowTransition,
+        c: right.c + (right.c - left.c),
+        r: right.r + (right.r - left.r),
     }
 
-    if (!U.isDefined(U.cell(grid, nextRight))) return []
-
-    return [nextRight, ...getRightAntiNodes(right, nextRight, grid)]
+    return U.defined(U.cell(grid, nextRight)) ?
+            [nextRight, ...getRightAntiNodes(right, nextRight, grid)]
+        :   []
 }
 
 const solve = (
@@ -78,9 +72,11 @@ const solve = (
             [...antennas]
                 .map(getPosition)
                 .flatMap((position, index, positions) =>
-                    U.subset(positions, index + 1, positions.length).flatMap(
-                        U.λ(getAntiNodes, position),
-                    ),
+                    positions
+                        .slice(index + 1)
+                        .flatMap((_position) =>
+                            getAntiNodes(position, _position),
+                        ),
                 ),
         ),
         getHash,
@@ -93,7 +89,7 @@ export const part01 = (input: string): number => {
 
     return solve(antennas, (left, right) =>
         [getLeftAntiNodes, getRightAntiNodes].flatMap((getAntiNode) =>
-            U.subset(getAntiNode(left, right, grid), 0, 1),
+            getAntiNode(left, right, grid).slice(0, 1),
         ),
     )
 }
@@ -103,13 +99,10 @@ export const part01 = (input: string): number => {
 export const part02 = (input: string): number => {
     const { antennas, grid } = parse(input)
 
-    return solve(
-        antennas,
-        (left: U.Position, right: U.Position): U.Position[] => [
-            ...getLeftAntiNodes(left, right, grid),
-            left,
-            right,
-            ...getRightAntiNodes(left, right, grid),
-        ],
-    )
+    return solve(antennas, (left, right) => [
+        ...getLeftAntiNodes(left, right, grid),
+        left,
+        right,
+        ...getRightAntiNodes(left, right, grid),
+    ])
 }

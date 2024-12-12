@@ -1,6 +1,6 @@
 import * as U from "@/utils"
 
-const parse = (input: string): string[] => U.lines(input)
+const parse = (input: string): U.Grid<string> => U.grid(input)
 
 /* --------------------------------- part01 --------------------------------- */
 

@@ -1,8 +1,12 @@
 import * as U from "@/utils"
 
 const solve = (
-    grid: string[][],
-    evaluate: (cell: string, position: U.Position, grid: string[][]) => number,
+    grid: U.Grid<string>,
+    evaluate: (
+        cell: string,
+        position: U.Position,
+        grid: U.Grid<string>,
+    ) => number,
     degrees = 0,
 ): number =>
     degrees === 360 ? 0 : (
@@ -13,16 +17,14 @@ const solve = (
 /* --------------------------------- part01 --------------------------------- */
 
 export const part01 = (input: string): number =>
-    solve(U.grid(input, ""), (cell, position, grid) =>
+    solve(U.grid(input), (cell, position, grid) =>
         cell === "X" ?
             U.count(
                 [U.east, U.southEast],
                 (direction) =>
-                    U.string(
-                        U.path(position, direction, 3)
-                            .map(U.λ(U.cell, grid))
-                            .filter(U.isDefined),
-                    ) === "XMAS",
+                    U.path(position, direction, 3)
+                        .map((position) => U.cell(grid, position))
+                        .join("") === "XMAS",
             )
         :   0,
     )
@@ -30,7 +32,7 @@ export const part01 = (input: string): number =>
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
-    solve(U.grid(input, ""), (cell, position, grid) =>
+    solve(U.grid(input), (cell, position, grid) =>
         cell === "A" ?
             Number(
                 [
@@ -38,11 +40,9 @@ export const part02 = (input: string): number =>
                     U.path(U.southWest(position), U.northEast, 2),
                 ].every(
                     (positions) =>
-                        U.string(
-                            positions
-                                .map(U.λ(U.cell, grid))
-                                .filter(U.isDefined),
-                        ) === "MAS",
+                        positions
+                            .map((position) => U.cell(grid, position))
+                            .join("") === "MAS",
                 ),
             )
         :   0,

@@ -2,14 +2,14 @@ import * as U from "@/utils"
 
 const parse = (
     input: string,
-): { rules: Record<string, number[]>; updates: number[][] } => {
+): { rules: Record<string, number[]>; updates: U.Grid<number> } => {
     const chunks = input.trim().split("\n\n")
 
     return {
         rules: Object.fromEntries(
             U.map2D(U.grid(U.at(chunks, 0), "|"), Number).flatMap((rule) => [
                 [String(rule), rule],
-                [String(U.reverse(rule)), rule],
+                [String(rule.toReversed()), rule],
             ]),
         ),
         updates: U.map2D(U.grid(U.at(chunks, 1), ","), Number),
@@ -31,7 +31,10 @@ const solve = (
     const { rules, updates } = parse(input)
 
     return U.sum(
-        updates.filter(U.λ(valid, rules)).map(U.λ(sort, rules)).map(U.middle),
+        updates
+            .filter((update) => valid(rules, update))
+            .map((update) => sort(rules, update))
+            .map((update) => U.at(update, Math.floor(update.length / 2))),
     )
 }
 
@@ -41,4 +44,5 @@ export const part01 = (input: string): number => solve(input, valid)
 
 /* --------------------------------- part02 --------------------------------- */
 
-export const part02 = (input: string): number => solve(input, U.isNot(valid))
+export const part02 = (input: string): number =>
+    solve(input, (rules, update) => !valid(rules, update))
