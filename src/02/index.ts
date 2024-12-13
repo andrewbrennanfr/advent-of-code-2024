@@ -18,7 +18,7 @@ const safe = (numbers: number[]): boolean =>
     )
 
 const solve = (
-    grid: number[][],
+    grid: U.Grid<number>,
     safe: (numbers: number[]) => boolean,
 ): number => U.count(grid, safe)
 
