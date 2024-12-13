@@ -1,31 +1,43 @@
-import * as U from "@/utils"
+import { at, count, order } from "@/array"
+import { clockwise, type Grid, makeGrid, mapGrid } from "@/grid"
+import { distance, product, sum } from "@/number"
 
-const parse = (input: string): U.Grid<number> =>
-    U.clockwise(U.map2D(U.grid(input, / +/u), Number)).map(U.order)
+const parse = (input: string): Grid<number> => {
+    const grid = makeGrid(input, / +/u)
+    const numbers = mapGrid(grid, Number)
+    const sideways = clockwise(numbers)
+
+    return sideways.map(order)
+}
 
 const solve = (
-    grid: U.Grid<number>,
+    grid: Grid<number>,
     combine: (
         left: number,
         right: number,
         arrays: [number[], number[]],
     ) => number,
-): number =>
-    U.sum(
-        grid.reduce((left, right) =>
-            left.map((_, index) =>
-                combine(U.at(left, index), U.at(right, index), [left, right]),
-            ),
-        ),
+): number => {
+    const numbers = grid.reduce((leftNumbers, rightNumbers) =>
+        leftNumbers.map((left, index) => {
+            const right = at(rightNumbers, index)
+
+            return combine(left, right, [leftNumbers, rightNumbers])
+        }),
     )
+
+    return sum(numbers)
+}
 
 /* --------------------------------- part01 --------------------------------- */
 
-export const part01 = (input: string): number => solve(parse(input), U.distance)
+export const part01 = (input: string): number => solve(parse(input), distance)
 
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
-    solve(parse(input), (left, _, [, rightArray]) =>
-        U.product([left, U.count(rightArray, (right) => right === left)]),
-    )
+    solve(parse(input), (left, __, [, rightNumbers]) => {
+        const counts = count(rightNumbers, (right) => right === left)
+
+        return product([left, counts])
+    })

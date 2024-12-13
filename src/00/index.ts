@@ -1,6 +1,6 @@
-import * as U from "@/utils"
+import { type Grid, makeGrid } from "@/grid"
 
-const parse = (input: string): U.Grid<string> => U.grid(input)
+const parse = (input: string): Grid<string> => makeGrid(input)
 
 /* --------------------------------- part01 --------------------------------- */
 

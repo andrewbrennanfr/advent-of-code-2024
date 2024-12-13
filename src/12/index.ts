@@ -1,60 +1,83 @@
-import * as U from "@/utils"
+import { at } from "@/array"
+import {
+    atPosition,
+    type Grid,
+    makeGrid,
+    mapGrid,
+    type Position,
+    square,
+    unsafeAtPosition,
+} from "@/grid"
+import { mutateSet } from "@/mutation"
+import { sum } from "@/number"
+import { hash } from "@/utils"
 
-const getPosition = (hash: string): U.Position => ({
-    c: Number(U.at(U.unhash(hash), -1)),
-    r: Number(U.at(U.unhash(hash), 0)),
-})
+const parse = (input: string): Grid<string> => makeGrid(input)
+
+const getPosition = (hash: string): Position => {
+    const unhashed = hash.split("_")
+    const c = Number(at(unhashed, -1))
+    const r = Number(at(unhashed, 0))
+
+    return { c, r }
+}
 
 const getRegion = (
-    grid: U.Grid<string>,
-    position: U.Position,
+    grid: Grid<string>,
+    position: Position,
     visited: Set<string> = new Set(),
 ): string[] => {
-    const positionHash = U.hash(position.r, position.c)
+    const positionHash = hash(position.r, position.c)
 
     if (visited.has(positionHash)) return []
 
-    visited.add(positionHash) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
+    const cell = atPosition(grid, position)
 
-    const { east, north, south, west } = U.square(position)
+    const { east, north, south, west } = square(position)
+    const inRegion = [east, north, south, west].filter(
+        (sibling) => unsafeAtPosition(grid, sibling) === cell,
+    )
+
+    const nextVisited = mutateSet(visited, [positionHash])
 
     return [
         positionHash,
-        ...[east, north, south, west]
-            .filter(
-                (sibling) => U.cell(grid, sibling) === U.cell(grid, position),
-            )
-            .flatMap((sibling) => getRegion(grid, sibling, visited)),
+        ...inRegion.flatMap((sibling) => getRegion(grid, sibling, nextVisited)),
     ]
 }
 
 const getRegions = (
-    grid: U.Grid<string>,
+    grid: Grid<string>,
     regions: Record<string, string[]> = {},
     unvisited: Set<string> = getUnvisited(grid),
 ): Record<string, string[]> => {
     if (unvisited.size === 0) return regions
 
-    const visitedArray = [...unvisited]
-    const next = U.at(visitedArray, 0)
-    const region = getRegion(grid, getPosition(next))
+    const unvisitedArray = [...unvisited]
 
-    return getRegions(
-        grid,
-        { ...regions, [next]: region },
-        new Set(visitedArray.filter((hash) => !region.includes(hash))),
+    const next = at(unvisitedArray, 0)
+    const nextPosition = getPosition(next)
+
+    const region = getRegion(grid, nextPosition)
+    const nextRegions = { ...regions, [next]: region }
+
+    const nextUnvisited = new Set(
+        unvisitedArray.filter((hash) => !region.includes(hash)),
     )
+
+    return getRegions(grid, nextRegions, nextUnvisited)
 }
 
-const getUnvisited = (grid: U.Grid<string>): Set<string> =>
-    new Set(
-        U.map2D(grid, (_, index) => index)
-            .flat()
-            .map(({ c, r }) => U.hash(r, c)),
-    )
+const getUnvisited = (grid: Grid<string>): Set<string> => {
+    const gridIndexes = mapGrid(grid, (__, index) => index)
+    const positions = gridIndexes.flat()
+    const positionHashes = positions.map(({ c, r }) => hash(r, c))
+
+    return new Set(positionHashes)
+}
 
 const evaluateRegions = (
-    grid: U.Grid<string>,
+    grid: Grid<string>,
     regions: Record<string, string[]>,
 ): number => {
     const groups = Object.values(regions)
@@ -62,87 +85,98 @@ const evaluateRegions = (
     const totals = groups.map((group) => {
         const edges = group.flatMap((positionHash) => {
             const position = getPosition(positionHash)
+            const cell = atPosition(grid, position)
 
-            const { east, north, south, west } = U.square(position)
+            const { east, north, south, west } = square(position)
 
             return [east, north, south, west].filter(
-                (sibling) => U.cell(grid, sibling) !== U.cell(grid, position),
+                (sibling) => unsafeAtPosition(grid, sibling) !== cell,
             )
         })
 
         return group.length * edges.length
     })
 
-    return U.sum(totals)
+    return sum(totals)
 }
 
-const corner = (
+const isCorner = (
     cell: string,
-    {
-        edges: { left, right },
-        target,
-    }: {
-        edges: Record<"left" | "right", string | undefined>
-        target: string | undefined
-    },
+    { left, right }: Record<"left" | "right", string | undefined>,
+    target: string | undefined,
 ): boolean =>
     (left !== cell && right !== cell) ||
     (target !== cell && left === cell && right === cell)
 
-const getCornerCount = (grid: U.Grid<string>, positionHash: string): number => {
-    const getCell = (position: U.Position): string | undefined =>
-        U.cell(grid, position)
-
+const getCornerCount = (grid: Grid<string>, positionHash: string): number => {
     const position = getPosition(positionHash)
-    const cell = getCell(position)
+    const cell = atPosition(grid, position)
 
-    if (
-        Object.values(U.square(position)).every(
-            (surroundingPosition) => getCell(surroundingPosition) === cell,
-        )
+    const surrounding = square(position)
+    const isInternal = Object.values(surrounding).every(
+        (surroundingPosition) =>
+            unsafeAtPosition(grid, surroundingPosition) === cell,
     )
-        return 0
 
-    const { northEast, northWest, southEast, southWest } = U.square(position)
-    const { east, north, south, west } = U.square(position)
+    if (isInternal) return 0
+
+    const {
+        east,
+        north,
+        northEast,
+        northWest,
+        south,
+        southEast,
+        southWest,
+        west,
+    } = surrounding
 
     return [
         {
-            edges: { left: getCell(east), right: getCell(north) },
-            target: getCell(northEast),
+            left: unsafeAtPosition(grid, east),
+            right: unsafeAtPosition(grid, north),
+            target: unsafeAtPosition(grid, northEast),
         },
         {
-            edges: { left: getCell(west), right: getCell(north) },
-            target: getCell(northWest),
+            left: unsafeAtPosition(grid, west),
+            right: unsafeAtPosition(grid, north),
+            target: unsafeAtPosition(grid, northWest),
         },
         {
-            edges: { left: getCell(east), right: getCell(south) },
-            target: getCell(southEast),
+            left: unsafeAtPosition(grid, east),
+            right: unsafeAtPosition(grid, south),
+            target: unsafeAtPosition(grid, southEast),
         },
         {
-            edges: { left: getCell(west), right: getCell(south) },
-            target: getCell(southWest),
+            left: unsafeAtPosition(grid, west),
+            right: unsafeAtPosition(grid, south),
+            target: unsafeAtPosition(grid, southWest),
         },
-    ].filter(({ edges, target }) => corner(U.guard(cell), { edges, target }))
-        .length
+    ].filter(({ left, right, target }) =>
+        isCorner(cell, { left, right }, target),
+    ).length
 }
 
 const evaluateDiscountedRegions = (
-    grid: U.Grid<string>,
+    grid: Grid<string>,
     regions: Record<string, string[]>,
-): number =>
-    U.sum(
-        Object.values(regions).map(
-            (group) =>
-                group.length *
-                U.sum(group.map((hash) => getCornerCount(grid, hash))),
-        ),
-    )
+): number => {
+    const regionList = Object.values(regions)
+    const regionCosts = regionList.map((region) => {
+        const sideCount = sum(
+            region.map((positionHash) => getCornerCount(grid, positionHash)),
+        )
+
+        return region.length * sideCount
+    })
+
+    return sum(regionCosts)
+}
 
 /* --------------------------------- part01 --------------------------------- */
 
 export const part01 = (input: string): number => {
-    const grid = U.grid(input)
+    const grid = parse(input)
 
     return evaluateRegions(grid, getRegions(grid))
 }
@@ -150,7 +184,7 @@ export const part01 = (input: string): number => {
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number => {
-    const grid = U.grid(input)
+    const grid = parse(input)
 
     return evaluateDiscountedRegions(grid, getRegions(grid))
 }

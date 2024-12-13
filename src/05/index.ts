@@ -1,24 +1,27 @@
-import * as U from "@/utils"
+import { at } from "@/array"
+import { type Grid, makeGrid, mapGrid } from "@/grid"
+import { sum } from "@/number"
+import { safe } from "@/utils"
 
 const parse = (
     input: string,
-): { rules: Record<string, number[]>; updates: U.Grid<number> } => {
+): { rules: Record<string, number[]>; updates: Grid<number> } => {
     const chunks = input.trim().split("\n\n")
 
     return {
         rules: Object.fromEntries(
-            U.map2D(U.grid(U.at(chunks, 0), "|"), Number).flatMap((rule) => [
+            mapGrid(makeGrid(at(chunks, 0), "|"), Number).flatMap((rule) => [
                 [String(rule), rule],
                 [String(rule.toReversed()), rule],
             ]),
         ),
-        updates: U.map2D(U.grid(U.at(chunks, 1), ","), Number),
+        updates: mapGrid(makeGrid(at(chunks, 1), ","), Number),
     }
 }
 
 const sort = (rules: Record<string, number[]>, update: number[]): number[] =>
-    U.sort(update, (left, right) =>
-        U.at(U.guard(rules[String([left, right])]), 0) === left ? -1 : 1,
+    update.toSorted((left, right) =>
+        at(safe(rules[String([left, right])]), 0) === left ? -1 : 1,
     )
 
 const valid = (rules: Record<string, number[]>, update: number[]): boolean =>
@@ -30,11 +33,11 @@ const solve = (
 ): number => {
     const { rules, updates } = parse(input)
 
-    return U.sum(
+    return sum(
         updates
             .filter((update) => valid(rules, update))
             .map((update) => sort(rules, update))
-            .map((update) => U.at(update, Math.floor(update.length / 2))),
+            .map((update) => at(update, Math.floor(update.length / 2))),
     )
 }
 

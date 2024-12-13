@@ -1,16 +1,22 @@
-import * as U from "@/utils"
+import { at } from "@/array"
+import { mutateArray } from "@/mutation"
+import { isEven, sum } from "@/number"
+import { always } from "@/utils"
 
-const parse = (input: string): { amount: number; value: string }[] =>
-    [...input.trim()].map(Number).map((amount, index) => ({
+const parse = (input: string): { amount: number; value: string }[] => {
+    const numbers = [...input.trim()].map(Number)
+
+    return numbers.map((amount, index) => ({
         amount,
-        value: U.even(index) ? String(index / 2) : ".",
+        value: isEven(index) ? String(index / 2) : ".",
     }))
+}
 
 const expand = (
     data: { amount: number; value: string }[],
 ): { amount: number; value: string }[] =>
     data.flatMap(({ amount, value }) =>
-        Array.from({ length: amount }, U.always({ amount: 1, value })),
+        Array.from({ length: amount }, always({ amount: 1, value })),
     )
 
 const move = (
@@ -21,27 +27,29 @@ const move = (
 
     if (firstGapIndex > lastNumberIndex) return data
 
-    const firstGap = U.at(data, firstGapIndex)
-    const lastNumber = U.at(data, lastNumberIndex)
+    const firstGap = at(data, firstGapIndex)
+    const lastNumber = at(data, lastNumberIndex)
 
-    data[firstGapIndex] = lastNumber // eslint-disable-line functional/immutable-data, functional/no-expression-statements
-    data[lastNumberIndex] = firstGap // eslint-disable-line functional/immutable-data, functional/no-expression-statements
+    const nextData = mutateArray(data, [
+        [firstGapIndex, lastNumber],
+        [lastNumberIndex, firstGap],
+    ])
 
-    return move(data)
+    return move(nextData)
 }
 
 const chunkedMove = (
     data: { amount: number; value: string }[],
-    currentIndex = data.length - 1,
+    currentIndex: number,
 ): { amount: number; value: string }[] => {
-    const current = U.at(data, currentIndex)
-    const availableGapIndex = data.findIndex(
-        ({ amount, value }) => value === "." && amount >= current.amount,
-    )
-
     const firstGapIndex = data.findIndex(({ value }) => value === ".")
 
     if (firstGapIndex >= currentIndex) return data
+
+    const current = at(data, currentIndex)
+    const availableGapIndex = data.findIndex(
+        ({ amount, value }) => value === "." && amount >= current.amount,
+    )
 
     if (
         availableGapIndex > currentIndex ||
@@ -50,37 +58,53 @@ const chunkedMove = (
     )
         return chunkedMove(data, currentIndex - 1)
 
-    const availableGap = U.at(data, availableGapIndex)
+    const availableGap = at(data, availableGapIndex)
 
-    const nextData = data.flatMap((item, index) =>
-        index === availableGapIndex ?
-            [
-                current,
-                {
-                    ...availableGap,
-                    amount: availableGap.amount - current.amount,
-                },
-            ]
-        : index === currentIndex ? { ...availableGap, amount: current.amount }
-        : item,
-    )
+    const nextData = data.flatMap((item, index) => {
+        if (index === availableGapIndex) {
+            const remainingGap = {
+                ...availableGap,
+                amount: availableGap.amount - current.amount,
+            }
+
+            if (remainingGap.amount > 0) return [current, remainingGap]
+
+            return current
+        }
+
+        if (index === currentIndex)
+            return { ...availableGap, amount: current.amount }
+
+        return item
+    })
 
     return chunkedMove(nextData, currentIndex - 1)
 }
 
-const checksum = (data: { amount: number; value: string }[]): number =>
-    U.sum(
-        data.map(
-            ({ value }, index) => index * (value === "." ? 0 : Number(value)),
-        ),
+const evaluate = (data: { amount: number; value: string }[]): number => {
+    const numbers = data.map(
+        ({ value }, index) => index * (value === "." ? 0 : Number(value)),
     )
+
+    return sum(numbers)
+}
 
 /* --------------------------------- part01 --------------------------------- */
 
-export const part01 = (input: string): number =>
-    checksum(move(expand(parse(input))))
+export const part01 = (input: string): number => {
+    const data = parse(input)
+    const expandedData = expand(data)
+    const movedData = move(expandedData)
+
+    return evaluate(movedData)
+}
 
 /* --------------------------------- part02 --------------------------------- */
 
-export const part02 = (input: string): number =>
-    checksum(expand(chunkedMove(parse(input))))
+export const part02 = (input: string): number => {
+    const data = parse(input)
+    const movedData = chunkedMove(data, data.length - 1)
+    const expandedData = expand(movedData)
+
+    return evaluate(expandedData)
+}

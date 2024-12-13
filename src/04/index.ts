@@ -1,49 +1,74 @@
-import * as U from "@/utils"
+import { count } from "@/array"
+import {
+    clockwise,
+    east,
+    type Grid,
+    makeGrid,
+    mapGrid,
+    northEast,
+    northWest,
+    pathGrid,
+    type Position,
+    southEast,
+    southWest,
+    unsafeAtPosition,
+} from "@/grid"
+import { sum } from "@/number"
+
+const parse = (input: string): Grid<string> => makeGrid(input)
 
 const solve = (
-    grid: U.Grid<string>,
-    evaluate: (
-        cell: string,
-        position: U.Position,
-        grid: U.Grid<string>,
-    ) => number,
-    degrees = 0,
-): number =>
-    degrees === 360 ? 0 : (
-        U.sum(U.map2D(grid, evaluate).flat()) +
-        solve(U.clockwise(grid, degrees + 90), evaluate, degrees + 90)
-    )
+    grid: Grid<string>,
+    degrees: number,
+    evaluate: (cell: string, position: Position, grid: Grid<string>) => number,
+): number => {
+    if (degrees === 360) return 0
+
+    const numbers = mapGrid(grid, evaluate).flat()
+    const rotatedGrid = clockwise(grid, degrees + 90)
+
+    return sum(numbers) + solve(rotatedGrid, degrees + 90, evaluate)
+}
 
 /* --------------------------------- part01 --------------------------------- */
 
 export const part01 = (input: string): number =>
-    solve(U.grid(input), (cell, position, grid) =>
-        cell === "X" ?
-            U.count(
-                [U.east, U.southEast],
-                (direction) =>
-                    U.path2D(position, direction, 3)
-                        .map((position) => U.cell(grid, position))
-                        .join("") === "XMAS",
+    solve(parse(input), 0, (cell, position, grid) => {
+        if (cell !== "X") return 0
+
+        const directions = [east, southEast]
+
+        return count(directions, (direction) => {
+            const path = pathGrid(position, direction, 3)
+            const cells = path.map((position) =>
+                unsafeAtPosition(grid, position),
             )
-        :   0,
-    )
+
+            return cells.join("") === "XMAS"
+        })
+    })
 
 /* --------------------------------- part02 --------------------------------- */
 
 export const part02 = (input: string): number =>
-    solve(U.grid(input), (cell, position, grid) =>
-        cell === "A" ?
-            Number(
-                [
-                    U.path2D(U.northWest(position), U.southEast, 2),
-                    U.path2D(U.southWest(position), U.northEast, 2),
-                ].every(
-                    (positions) =>
-                        positions
-                            .map((position) => U.cell(grid, position))
-                            .join("") === "MAS",
-                ),
+    solve(parse(input), 0, (cell, position, grid) => {
+        if (cell !== "A") return 0
+
+        const northWestPosition = northWest(position)
+        const southWestPosition = southWest(position)
+
+        const paths = [
+            pathGrid(northWestPosition, southEast, 2),
+            pathGrid(southWestPosition, northEast, 2),
+        ]
+
+        const isCrossMas = paths.every((path) => {
+            const cells = path.map((position) =>
+                unsafeAtPosition(grid, position),
             )
-        :   0,
-    )
+
+            return cells.join("") === "MAS"
+        })
+
+        return Number(isCrossMas)
+    })

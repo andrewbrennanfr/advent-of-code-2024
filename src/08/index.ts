@@ -1,10 +1,19 @@
-import * as U from "@/utils"
+import { at, unique } from "@/array"
+import {
+    atPosition,
+    type Grid,
+    makeGrid,
+    mapGrid,
+    type Position,
+    unsafeAtPosition,
+} from "@/grid"
+import { isDefined } from "@/utils"
 
 const parse = (
     input: string,
-): { antennas: Record<string, Set<string>>; grid: U.Grid<string> } => {
-    const grid = U.grid(input)
-    const positions = U.map2D(grid, (_, index) => index)
+): { antennas: Record<string, Set<string>>; grid: Grid<string> } => {
+    const grid = makeGrid(input)
+    const positions = mapGrid(grid, (__, index) => index)
 
     return {
         antennas: Object.fromEntries(
@@ -14,11 +23,11 @@ const parse = (
                         .flat()
                         .filter(
                             (position) =>
-                                U.cell(grid, position) !== "." &&
-                                U.cell(grid, position) !== "#",
+                                atPosition(grid, position) !== "." &&
+                                atPosition(grid, position) !== "#",
                         )
-                        .map(({ c, r }) => U.hash(r, c)),
-                    (hash) => U.guard(U.cell(grid, getPosition(hash))),
+                        .map(getHash),
+                    (hash) => atPosition(grid, getPosition(hash)),
                 ),
             ).map(([key, value]) => [key, new Set(value)]),
         ),
@@ -26,46 +35,48 @@ const parse = (
     }
 }
 
-const getPosition = (hash: string): U.Position => ({
-    c: Number(U.at(U.unhash(hash), -1)),
-    r: Number(U.at(U.unhash(hash), 0)),
+const getHash = ({ c, r }: Position): string => `${r}_${c}`
+
+const getPosition = (hash: string): Position => ({
+    c: Number(at(hash.split("_"), -1)),
+    r: Number(at(hash.split("_"), 0)),
 })
 
 const getLeftAntiNodes = (
-    left: U.Position,
-    right: U.Position,
-    grid: U.Grid<string>,
-): U.Position[] => {
+    left: Position,
+    right: Position,
+    grid: Grid<string>,
+): Position[] => {
     const nextLeft = {
         c: left.c - (right.c - left.c),
         r: left.r - (right.r - left.r),
     }
 
-    return U.defined(U.cell(grid, nextLeft)) ?
+    return isDefined(unsafeAtPosition(grid, nextLeft)) ?
             [nextLeft, ...getLeftAntiNodes(nextLeft, left, grid)]
         :   []
 }
 
 const getRightAntiNodes = (
-    left: U.Position,
-    right: U.Position,
-    grid: U.Grid<string>,
-): U.Position[] => {
+    left: Position,
+    right: Position,
+    grid: Grid<string>,
+): Position[] => {
     const nextRight = {
         c: right.c + (right.c - left.c),
         r: right.r + (right.r - left.r),
     }
 
-    return U.defined(U.cell(grid, nextRight)) ?
+    return isDefined(unsafeAtPosition(grid, nextRight)) ?
             [nextRight, ...getRightAntiNodes(right, nextRight, grid)]
         :   []
 }
 
 const solve = (
     antennas: Record<string, Set<string>>,
-    getAntiNodes: (left: U.Position, right: U.Position) => U.Position[],
+    getAntiNodes: (left: Position, right: Position) => Position[],
 ): number =>
-    U.unique(
+    unique(
         Object.values(antennas).flatMap((antennas) =>
             [...antennas]
                 .map(getPosition)
@@ -77,7 +88,7 @@ const solve = (
                         ),
                 ),
         ),
-        ({ c, r }) => U.hash(r, c),
+        getHash,
     ).length
 
 /* --------------------------------- part01 --------------------------------- */

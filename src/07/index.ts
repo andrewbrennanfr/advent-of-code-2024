@@ -1,37 +1,37 @@
-import * as U from "@/utils"
+import { at } from "@/array"
+import { type Grid, makeGrid, mapGrid } from "@/grid"
+import { sum } from "@/number"
 
-const parse = (input: string): U.Grid<number> =>
-    U.map2D(U.grid(input, /: | /u), Number)
+const parse = (input: string): Grid<number> =>
+    mapGrid(makeGrid(input, /: | /u), Number)
 
 const solve = (
-    equations: U.Grid<number>,
+    equations: Grid<number>,
     ...operators: ((left: number, right: number) => number)[]
-): number =>
-    U.sum(
-        equations
-            .filter((equation) =>
-                equation
-                    .slice(1)
-                    .reduce<number[]>(
-                        (left, right) =>
-                            left.length === 0 ?
-                                [right]
-                            :   left.flatMap((value) =>
-                                    operators
-                                        .map((operator) =>
-                                            operator(value, right),
-                                        )
-                                        .filter(
-                                            (result) =>
-                                                result <= U.at(equation, 0),
-                                        ),
-                                ),
-                        [],
-                    )
-                    .includes(U.at(equation, 0)),
-            )
-            .map((value) => U.at(value, 0)),
-    )
+): number => {
+    const correctEquations = equations.filter((equation) => {
+        const answer = at(equation, 0)
+        const inputs = equation.slice(1)
+
+        const answers = inputs.reduce<number[]>((left, right) => {
+            if (left.length === 0) return [right]
+
+            return left.flatMap((value) => {
+                const nextAnswers = operators.map((operator) =>
+                    operator(value, right),
+                )
+
+                return nextAnswers.filter((nextAnswer) => nextAnswer <= answer)
+            })
+        }, [])
+
+        return answers.includes(answer)
+    })
+
+    const correctAnswers = correctEquations.map((equation) => at(equation, 0))
+
+    return sum(correctAnswers)
+}
 
 /* --------------------------------- part01 --------------------------------- */
 
