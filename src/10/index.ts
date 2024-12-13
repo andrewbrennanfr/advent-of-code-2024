@@ -12,7 +12,9 @@ const getEnds = (grid: U.Grid<number>, position: U.Position): U.Position[] => {
 
     if (current === 9) return [position]
 
-    const siblings = Object.values(U.siblings(position)).filter((sibling) =>
+    const { east, north, south, west } = U.square(position)
+
+    const siblings = [east, north, south, west].filter((sibling) =>
         U.defined(U.cell(grid, sibling)),
     )
     const nextSiblings = siblings.filter(

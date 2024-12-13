@@ -22,7 +22,7 @@ export const part01 = (input: string): number =>
             U.count(
                 [U.east, U.southEast],
                 (direction) =>
-                    U.path(position, direction, 3)
+                    U.path2D(position, direction, 3)
                         .map((position) => U.cell(grid, position))
                         .join("") === "XMAS",
             )
@@ -36,8 +36,8 @@ export const part02 = (input: string): number =>
         cell === "A" ?
             Number(
                 [
-                    U.path(U.northWest(position), U.southEast, 2),
-                    U.path(U.southWest(position), U.northEast, 2),
+                    U.path2D(U.northWest(position), U.southEast, 2),
+                    U.path2D(U.southWest(position), U.northEast, 2),
                 ].every(
                     (positions) =>
                         positions

@@ -1,3 +1,5 @@
+export type Coordinate = Record<"x" | "y" | "z", number>
+
 export type Grid<T> = T[][]
 
 export type Position = Record<"c" | "r", number>
@@ -27,6 +29,36 @@ export const always =
 export const at = <T>(array: T[], index: number): NonNullable<T> =>
     guard(array[(index + array.length) % array.length])
 
+export const back = ({ x, y, z }: Coordinate): Coordinate => ({
+    x,
+    y,
+    z: z - 1,
+})
+
+export const backDown = (coordinate: Coordinate): Coordinate =>
+    back(down(coordinate))
+
+export const backDownLeft = (coordinate: Coordinate): Coordinate =>
+    backDown(left(coordinate))
+
+export const backDownRight = (coordinate: Coordinate): Coordinate =>
+    backDown(right(coordinate))
+
+export const backLeft = (coordinate: Coordinate): Coordinate =>
+    back(left(coordinate))
+
+export const backRight = (coordinate: Coordinate): Coordinate =>
+    back(right(coordinate))
+
+export const backUp = (coordinate: Coordinate): Coordinate =>
+    back(up(coordinate))
+
+export const backUpLeft = (coordinate: Coordinate): Coordinate =>
+    backUp(left(coordinate))
+
+export const backUpRight = (coordinate: Coordinate): Coordinate =>
+    backUp(right(coordinate))
+
 export const between = (left: number, number: number, right: number): boolean =>
     (left <= number && number <= right) || (left >= number && number >= right)
 
@@ -51,13 +83,63 @@ export const count = <T>(
     predicate: (value: T, index: number, array: T[]) => boolean,
 ): number => array.filter(predicate).length
 
-export const cousins = (
-    position: Position,
-): Record<"northEast" | "northWest" | "southEast" | "southWest", Position> => ({
-    northEast: northEast(position),
-    northWest: northWest(position),
-    southEast: southEast(position),
-    southWest: southWest(position),
+export const cube = (
+    coordinate: Coordinate,
+): Record<
+    | "back"
+    | "backDown"
+    | "backDownLeft"
+    | "backDownRight"
+    | "backLeft"
+    | "backRight"
+    | "backUp"
+    | "backUpLeft"
+    | "backUpRight"
+    | "down"
+    | "downLeft"
+    | "downRight"
+    | "front"
+    | "frontDown"
+    | "frontDownLeft"
+    | "frontDownRight"
+    | "frontLeft"
+    | "frontRight"
+    | "frontUp"
+    | "frontUpLeft"
+    | "frontUpRight"
+    | "left"
+    | "right"
+    | "up"
+    | "upLeft"
+    | "upRight",
+    Coordinate
+> => ({
+    back: back(coordinate),
+    backDown: backDown(coordinate),
+    backDownLeft: backDownLeft(coordinate),
+    backDownRight: backDownRight(coordinate),
+    backLeft: backLeft(coordinate),
+    backRight: backRight(coordinate),
+    backUp: backUp(coordinate),
+    backUpLeft: backUpLeft(coordinate),
+    backUpRight: backUpRight(coordinate),
+    down: down(coordinate),
+    downLeft: downLeft(coordinate),
+    downRight: downRight(coordinate),
+    front: front(coordinate),
+    frontDown: frontDown(coordinate),
+    frontDownLeft: frontDownLeft(coordinate),
+    frontDownRight: frontDownRight(coordinate),
+    frontLeft: frontLeft(coordinate),
+    frontRight: frontRight(coordinate),
+    frontUp: frontUp(coordinate),
+    frontUpLeft: frontUpLeft(coordinate),
+    frontUpRight: frontUpRight(coordinate),
+    left: left(coordinate),
+    right: right(coordinate),
+    up: up(coordinate),
+    upLeft: upLeft(coordinate),
+    upRight: upRight(coordinate),
 })
 
 export const defined = <T>(value: T): value is NonNullable<T> =>
@@ -66,9 +148,51 @@ export const defined = <T>(value: T): value is NonNullable<T> =>
 export const distance = (left: number, right: number): number =>
     Math.abs(left - right)
 
+export const down = ({ x, y, z }: Coordinate): Coordinate => ({
+    x,
+    y: y - 1,
+    z,
+})
+
+export const downLeft = (coordinate: Coordinate): Coordinate =>
+    down(left(coordinate))
+
+export const downRight = (coordinate: Coordinate): Coordinate =>
+    down(right(coordinate))
+
 export const east = ({ c, r }: Position): Position => ({ c: c + 1, r })
 
 export const even = (number: number): boolean => number % 2 === 0
+
+export const front = ({ x, y, z }: Coordinate): Coordinate => ({
+    x,
+    y,
+    z: z + 1,
+})
+
+export const frontDown = (coordinate: Coordinate): Coordinate =>
+    front(down(coordinate))
+
+export const frontDownLeft = (coordinate: Coordinate): Coordinate =>
+    frontDown(left(coordinate))
+
+export const frontDownRight = (coordinate: Coordinate): Coordinate =>
+    frontDown(right(coordinate))
+
+export const frontLeft = (coordinate: Coordinate): Coordinate =>
+    front(left(coordinate))
+
+export const frontRight = (coordinate: Coordinate): Coordinate =>
+    front(right(coordinate))
+
+export const frontUp = (coordinate: Coordinate): Coordinate =>
+    front(up(coordinate))
+
+export const frontUpLeft = (coordinate: Coordinate): Coordinate =>
+    frontUp(left(coordinate))
+
+export const frontUpRight = (coordinate: Coordinate): Coordinate =>
+    frontUp(right(coordinate))
 
 export const grid = (
     string: string,
@@ -81,6 +205,12 @@ export const grid = (
 
 export const guard = <T>(value: T): NonNullable<T> =>
     value ?? panic(`${String(value)} did not pass guard!`)
+
+export const left = ({ x, y, z }: Coordinate): Coordinate => ({
+    x: x - 1,
+    y,
+    z,
+})
 
 export const manhattan = (left: Position, right: Position): number =>
     distance(left.r, right.r) + distance(left.c, right.c)
@@ -120,7 +250,7 @@ export const panic = (message: string): never => {
     throw new Error(message) // eslint-disable-line functional/no-throw-statements
 }
 
-export const path = $(
+export const path2D = $(
     (
         start: Position,
         direction: (position: Position) => Position,
@@ -128,19 +258,27 @@ export const path = $(
     ): Position[] =>
         moves === 0 ?
             [start]
-        :   [start, ...path(direction(start), direction, moves - 1)],
+        :   [start, ...path2D(direction(start), direction, moves - 1)],
+)
+
+export const path3D = $(
+    (
+        start: Coordinate,
+        direction: (position: Coordinate) => Coordinate,
+        moves: number,
+    ): Coordinate[] =>
+        moves === 0 ?
+            [start]
+        :   [start, ...path3D(direction(start), direction, moves - 1)],
 )
 
 export const product = (numbers: number[]): number =>
     numbers.reduce((left, right) => left * right, Number(numbers.length > 0))
 
-export const siblings = (
-    position: Position,
-): Record<"east" | "north" | "south" | "west", Position> => ({
-    east: east(position),
-    north: north(position),
-    south: south(position),
-    west: west(position),
+export const right = ({ x, y, z }: Coordinate): Coordinate => ({
+    x: x + 1,
+    y,
+    z,
 })
 
 export const sort = <T>(
@@ -154,7 +292,7 @@ export const southEast = (position: Position): Position => south(east(position))
 
 export const southWest = (position: Position): Position => south(west(position))
 
-export const surrounding = (
+export const square = (
     position: Position,
 ): Record<
     | "east"
@@ -166,7 +304,16 @@ export const surrounding = (
     | "southWest"
     | "west",
     Position
-> => ({ ...cousins(position), ...siblings(position) })
+> => ({
+    east: east(position),
+    north: north(position),
+    northEast: northEast(position),
+    northWest: northWest(position),
+    south: south(position),
+    southEast: southEast(position),
+    southWest: southWest(position),
+    west: west(position),
+})
 
 export const sum = (numbers: number[]): number =>
     numbers.reduce((left, right) => left + right, 0)
@@ -181,5 +328,13 @@ export const unique = <T>(
 
     return [...new Set(array.map(hash))].map((hash) => guard(lookup[hash]))
 }
+
+export const up = ({ x, y, z }: Coordinate): Coordinate => ({ x, y: y + 1, z })
+
+export const upLeft = (coordinate: Coordinate): Coordinate =>
+    up(left(coordinate))
+
+export const upRight = (coordinate: Coordinate): Coordinate =>
+    up(right(coordinate))
 
 export const west = ({ c, r }: Position): Position => ({ c: c - 1, r })

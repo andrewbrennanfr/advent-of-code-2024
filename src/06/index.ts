@@ -50,7 +50,7 @@ const getPath = (
     guard: { facing: string; position: U.Position },
     size: number,
 ): U.Position[] =>
-    U.path(
+    U.path2D(
         guard.position,
         getNextDirection(guard.facing),
         getNextDistance(guard, size),

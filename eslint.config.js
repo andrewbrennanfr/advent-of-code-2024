@@ -20,6 +20,7 @@ export default [
             "functional/prefer-immutable-types": "off",
             "functional/type-declaration-immutability": "off",
             "max-lines": "off",
+            "max-lines-per-function": "off",
             "no-ternary": "off",
             "sort-imports": "off",
             "unicorn/no-array-callback-reference": "off",
@@ -41,7 +42,10 @@ export default [
                 { allowReturningBranches: true },
             ],
             "functional/prefer-tacit": "error",
-            "id-length": ["error", { exceptions: ["_", "$", "c", "r", "U"] }],
+            "id-length": [
+                "error",
+                { exceptions: ["_", "$", "c", "r", "U", "x", "y", "z"] },
+            ],
             "no-restricted-syntax": [
                 "error",
                 {

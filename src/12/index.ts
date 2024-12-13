@@ -19,9 +19,11 @@ const getRegion = (
 
     visited.add(positionHash) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
 
+    const { east, north, south, west } = U.square(position)
+
     return [
         positionHash,
-        ...Object.values(U.siblings(position))
+        ...[east, north, south, west]
             .filter(
                 (sibling) => U.cell(grid, sibling) === U.cell(grid, position),
             )
@@ -64,7 +66,9 @@ const evaluateRegions = (
         const edges = group.flatMap((positionHash) => {
             const position = getPosition(positionHash)
 
-            return Object.values(U.siblings(position)).filter(
+            const { east, north, south, west } = U.square(position)
+
+            return [east, north, south, west].filter(
                 (sibling) => U.cell(grid, sibling) !== U.cell(grid, position),
             )
         })
@@ -96,14 +100,14 @@ const getCornerCount = (grid: U.Grid<string>, positionHash: string): number => {
     const cell = getCell(position)
 
     if (
-        Object.values(U.surrounding(position)).every(
+        Object.values(U.square(position)).every(
             (surroundingPosition) => getCell(surroundingPosition) === cell,
         )
     )
         return 0
 
-    const { northEast, northWest, southEast, southWest } = U.cousins(position)
-    const { east, north, south, west } = U.siblings(position)
+    const { northEast, northWest, southEast, southWest } = U.square(position)
+    const { east, north, south, west } = U.square(position)
 
     return [
         {
