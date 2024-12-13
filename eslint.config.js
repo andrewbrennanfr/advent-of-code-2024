@@ -14,8 +14,6 @@ export default [
     {
         rules: {
             "@typescript-eslint/no-magic-numbers": "off",
-            "@typescript-eslint/no-shadow": "off",
-            "@typescript-eslint/no-use-before-define": "off",
             "@typescript-eslint/prefer-readonly-parameter-types": "off",
             "functional/prefer-immutable-types": "off",
             "functional/type-declaration-immutability": "off",

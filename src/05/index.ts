@@ -29,13 +29,13 @@ const valid = (rules: Record<string, number[]>, update: number[]): boolean =>
 
 const solve = (
     input: string,
-    valid: (rules: Record<string, number[]>, update: number[]) => boolean,
+    isValid: (rules: Record<string, number[]>, update: number[]) => boolean,
 ): number => {
     const { rules, updates } = parse(input)
 
     return sum(
         updates
-            .filter((update) => valid(rules, update))
+            .filter((update) => isValid(rules, update))
             .map((update) => sort(rules, update))
             .map((update) => at(update, Math.floor(update.length / 2))),
     )

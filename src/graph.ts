@@ -8,9 +8,29 @@ export type Graph3D<T> = T[][][]
 
 /* -------------------------------------------------------------------------- */
 
+export const up = ({ y, ...coordinate }: Coordinate): Coordinate => ({
+    ...coordinate,
+    y: y + 1,
+})
+
 export const back = ({ z, ...coordinate }: Coordinate): Coordinate => ({
     ...coordinate,
     z: z - 1,
+})
+
+export const right = ({ x, ...coordinate }: Coordinate): Coordinate => ({
+    ...coordinate,
+    x: x + 1,
+})
+
+export const down = ({ y, ...coordinate }: Coordinate): Coordinate => ({
+    ...coordinate,
+    y: y - 1,
+})
+
+export const left = ({ x, ...coordinate }: Coordinate): Coordinate => ({
+    ...coordinate,
+    x: x - 1,
 })
 
 export const backDown = (coordinate: Coordinate): Coordinate =>
@@ -36,6 +56,58 @@ export const backUpLeft = (coordinate: Coordinate): Coordinate =>
 
 export const backUpRight = (coordinate: Coordinate): Coordinate =>
     backUp(right(coordinate))
+
+export const downLeft = (coordinate: Coordinate): Coordinate =>
+    down(left(coordinate))
+
+export const downRight = (coordinate: Coordinate): Coordinate =>
+    down(right(coordinate))
+
+export const front = ({ z, ...coordinate }: Coordinate): Coordinate => ({
+    ...coordinate,
+    z: z + 1,
+})
+
+export const frontDown = (coordinate: Coordinate): Coordinate =>
+    front(down(coordinate))
+
+export const frontDownLeft = (coordinate: Coordinate): Coordinate =>
+    frontDown(left(coordinate))
+
+export const frontDownRight = (coordinate: Coordinate): Coordinate =>
+    frontDown(right(coordinate))
+
+export const frontLeft = (coordinate: Coordinate): Coordinate =>
+    front(left(coordinate))
+
+export const frontRight = (coordinate: Coordinate): Coordinate =>
+    front(right(coordinate))
+
+export const frontUp = (coordinate: Coordinate): Coordinate =>
+    front(up(coordinate))
+
+export const frontUpLeft = (coordinate: Coordinate): Coordinate =>
+    frontUp(left(coordinate))
+
+export const frontUpRight = (coordinate: Coordinate): Coordinate =>
+    frontUp(right(coordinate))
+
+export const pathGraph = memo(
+    (
+        start: Coordinate,
+        direction: (position: Coordinate) => Coordinate,
+        moves: number,
+    ): Coordinate[] =>
+        moves === 0 ?
+            [start]
+        :   [start, ...pathGraph(direction(start), direction, moves - 1)],
+)
+
+export const upLeft = (coordinate: Coordinate): Coordinate =>
+    up(left(coordinate))
+
+export const upRight = (coordinate: Coordinate): Coordinate =>
+    up(right(coordinate))
 
 // eslint-disable-next-line max-lines-per-function
 export const cube = (
@@ -96,75 +168,3 @@ export const cube = (
     upLeft: upLeft(coordinate),
     upRight: upRight(coordinate),
 })
-
-export const down = ({ y, ...coordinate }: Coordinate): Coordinate => ({
-    ...coordinate,
-    y: y - 1,
-})
-
-export const downLeft = (coordinate: Coordinate): Coordinate =>
-    down(left(coordinate))
-
-export const downRight = (coordinate: Coordinate): Coordinate =>
-    down(right(coordinate))
-
-export const front = ({ z, ...coordinate }: Coordinate): Coordinate => ({
-    ...coordinate,
-    z: z + 1,
-})
-
-export const frontDown = (coordinate: Coordinate): Coordinate =>
-    front(down(coordinate))
-
-export const frontDownLeft = (coordinate: Coordinate): Coordinate =>
-    frontDown(left(coordinate))
-
-export const frontDownRight = (coordinate: Coordinate): Coordinate =>
-    frontDown(right(coordinate))
-
-export const frontLeft = (coordinate: Coordinate): Coordinate =>
-    front(left(coordinate))
-
-export const frontRight = (coordinate: Coordinate): Coordinate =>
-    front(right(coordinate))
-
-export const frontUp = (coordinate: Coordinate): Coordinate =>
-    front(up(coordinate))
-
-export const frontUpLeft = (coordinate: Coordinate): Coordinate =>
-    frontUp(left(coordinate))
-
-export const frontUpRight = (coordinate: Coordinate): Coordinate =>
-    frontUp(right(coordinate))
-
-export const left = ({ x, ...coordinate }: Coordinate): Coordinate => ({
-    ...coordinate,
-    x: x - 1,
-})
-
-export const pathGraph = memo(
-    (
-        start: Coordinate,
-        direction: (position: Coordinate) => Coordinate,
-        moves: number,
-    ): Coordinate[] =>
-        moves === 0 ?
-            [start]
-        :   [start, ...pathGraph(direction(start), direction, moves - 1)],
-)
-
-export const right = ({ x, ...coordinate }: Coordinate): Coordinate => ({
-    ...coordinate,
-    x: x + 1,
-})
-
-export const up = ({ y, ...coordinate }: Coordinate): Coordinate => ({
-    ...coordinate,
-    y: y + 1,
-})
-
-export const upLeft = (coordinate: Coordinate): Coordinate =>
-    up(left(coordinate))
-
-export const upRight = (coordinate: Coordinate): Coordinate =>
-    up(right(coordinate))

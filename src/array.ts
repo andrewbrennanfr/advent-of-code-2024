@@ -1,5 +1,8 @@
 import { safe } from "@/utils"
 
+export const unsafeAt = <T>(array: T[], index: number): T | undefined =>
+    array.at(index)
+
 export const at = <T>(array: T[], index: number): NonNullable<T> =>
     safe(unsafeAt(array, index))
 
@@ -24,8 +27,5 @@ export const unique = <T>(
     )
     const hashes = new Set(Object.keys(hashMap))
 
-    return [...hashes].map((hash) => safe(hashMap[hash]))
+    return [...hashes].map((hashMapKey) => safe(hashMap[hashMapKey]))
 }
-
-export const unsafeAt = <T>(array: T[], index: number): T | undefined =>
-    array.at(index)

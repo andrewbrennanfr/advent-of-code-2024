@@ -30,8 +30,8 @@ const solve = memo((numbers: number[], times: number): number => {
     if (numbers.length === 1) {
         const number = at(numbers, 0)
         const evaluatedNumbers = evaluate(number)
-        const solvedNumbers = evaluatedNumbers.map((number) =>
-            solve([number], times - 1),
+        const solvedNumbers = evaluatedNumbers.map((evaluatedNumber) =>
+            solve([evaluatedNumber], times - 1),
         )
 
         return sum(solvedNumbers)

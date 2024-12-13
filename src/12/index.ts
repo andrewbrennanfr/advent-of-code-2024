@@ -14,8 +14,8 @@ import { hash } from "@/utils"
 
 const parse = (input: string): Grid<string> => makeGrid(input)
 
-const getPosition = (hash: string): Position => {
-    const unhashed = hash.split("_")
+const getPosition = (hashString: string): Position => {
+    const unhashed = hashString.split("_")
     const c = Number(at(unhashed, -1))
     const r = Number(at(unhashed, 0))
 
@@ -46,6 +46,14 @@ const getRegion = (
     ]
 }
 
+const getUnvisited = (grid: Grid<string>): Set<string> => {
+    const gridIndexes = mapGrid(grid, (__, index) => index)
+    const positions = gridIndexes.flat()
+    const positionHashes = positions.map(({ c, r }) => hash(r, c))
+
+    return new Set(positionHashes)
+}
+
 const getRegions = (
     grid: Grid<string>,
     regions: Record<string, string[]> = {},
@@ -62,18 +70,10 @@ const getRegions = (
     const nextRegions = { ...regions, [next]: region }
 
     const nextUnvisited = new Set(
-        unvisitedArray.filter((hash) => !region.includes(hash)),
+        unvisitedArray.filter((hashString) => !region.includes(hashString)),
     )
 
     return getRegions(grid, nextRegions, nextUnvisited)
-}
-
-const getUnvisited = (grid: Grid<string>): Set<string> => {
-    const gridIndexes = mapGrid(grid, (__, index) => index)
-    const positions = gridIndexes.flat()
-    const positionHashes = positions.map(({ c, r }) => hash(r, c))
-
-    return new Set(positionHashes)
 }
 
 const evaluateRegions = (

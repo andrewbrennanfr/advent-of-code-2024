@@ -33,7 +33,7 @@ const parse = (
             grid
                 .flat()
                 .filter(({ cell }) => cell === "#")
-                .map(({ position }) => hash(position.r, position.c)),
+                .map(({ position: { c, r } }) => hash(r, c)),
         ),
     }
 }

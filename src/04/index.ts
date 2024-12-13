@@ -40,8 +40,8 @@ export const part01 = (input: string): number =>
 
         return count(directions, (direction) => {
             const path = pathGrid(position, direction, 3)
-            const cells = path.map((position) =>
-                unsafeAtPosition(grid, position),
+            const cells = path.map((position_) =>
+                unsafeAtPosition(grid, position_),
             )
 
             return cells.join("") === "XMAS"
@@ -63,8 +63,8 @@ export const part02 = (input: string): number =>
         ]
 
         const isCrossMas = paths.every((path) => {
-            const cells = path.map((position) =>
-                unsafeAtPosition(grid, position),
+            const cells = path.map((position_) =>
+                unsafeAtPosition(grid, position_),
             )
 
             return cells.join("") === "MAS"

@@ -8,6 +8,11 @@ export type Position = Record<"c" | "r", number>
 
 /* -------------------------------------------------------------------------- */
 
+export const unsafeAtPosition = <T>(
+    grid: Grid<T>,
+    { c, r }: Position,
+): T | undefined => grid[r]?.[c]
+
 export const atPosition = <T>(
     grid: Grid<T>,
     position: Position,
@@ -52,6 +57,11 @@ export const mapGrid = <T, U>(
 export const north = ({ r, ...position }: Position): Position => ({
     ...position,
     r: r - 1,
+})
+
+export const west = ({ c, ...position }: Position): Position => ({
+    ...position,
+    c: c - 1,
 })
 
 export const northEast = (position: Position): Position => north(east(position))
@@ -99,14 +109,4 @@ export const square = (
     southEast: southEast(position),
     southWest: southWest(position),
     west: west(position),
-})
-
-export const unsafeAtPosition = <T>(
-    grid: Grid<T>,
-    { c, r }: Position,
-): T | undefined => grid[r]?.[c]
-
-export const west = ({ c, ...position }: Position): Position => ({
-    ...position,
-    c: c - 1,
 })

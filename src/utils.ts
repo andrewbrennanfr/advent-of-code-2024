@@ -12,7 +12,7 @@ export const isDefined = <T>(value: T): value is NonNullable<T> =>
 export const memo =
     <T extends unknown[], U>(
         function_: (...arguments_: T) => U,
-        hash: (arguments_: T) => string = (arguments_) =>
+        getHash: (arguments_: T) => string = (arguments_) =>
             JSON.stringify(
                 arguments_.map((argument) =>
                     typeof argument === "function" ? argument.name : argument,
@@ -21,7 +21,7 @@ export const memo =
         cache: Record<string, U> = {},
     ): typeof function_ =>
     (...arguments_) =>
-        (cache[hash(arguments_)] ??= function_(...arguments_)) // eslint-disable-line functional/immutable-data
+        (cache[getHash(arguments_)] ??= function_(...arguments_)) // eslint-disable-line functional/immutable-data
 
 export const panic = (message: string): never => {
     throw new Error(message) // eslint-disable-line functional/no-throw-statements

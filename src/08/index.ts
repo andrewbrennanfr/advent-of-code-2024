@@ -9,6 +9,13 @@ import {
 } from "@/grid"
 import { isDefined } from "@/utils"
 
+const getHash = ({ c, r }: Position): string => `${r}_${c}`
+
+const getPosition = (hash: string): Position => ({
+    c: Number(at(hash.split("_"), -1)),
+    r: Number(at(hash.split("_"), 0)),
+})
+
 const parse = (
     input: string,
 ): { antennas: Record<string, Set<string>>; grid: Grid<string> } => {
@@ -34,13 +41,6 @@ const parse = (
         grid,
     }
 }
-
-const getHash = ({ c, r }: Position): string => `${r}_${c}`
-
-const getPosition = (hash: string): Position => ({
-    c: Number(at(hash.split("_"), -1)),
-    r: Number(at(hash.split("_"), 0)),
-})
 
 const getLeftAntiNodes = (
     left: Position,
@@ -77,8 +77,8 @@ const solve = (
     getAntiNodes: (left: Position, right: Position) => Position[],
 ): number =>
     unique(
-        Object.values(antennas).flatMap((antennas) =>
-            [...antennas]
+        Object.values(antennas).flatMap((antennaSet) =>
+            [...antennaSet]
                 .map(getPosition)
                 .flatMap((position, index, positions) =>
                     positions
