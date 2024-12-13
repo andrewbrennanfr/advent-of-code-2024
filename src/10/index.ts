@@ -35,7 +35,7 @@ export const part01 = (input: string): number => {
         getStarts(grid).flatMap((start) =>
             getEnds(grid, start).map((end) => ({ end, start })),
         ),
-        ({ end, start }) => `${start.r}_${start.c}_${end.r}_${end.c}`,
+        ({ end, start }) => U.hash(start.r, start.c, end.r, end.c),
     ).length
 }
 

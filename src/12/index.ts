@@ -1,11 +1,8 @@
 import * as U from "@/utils"
 
-const getPositionHash = (position: U.Position): string =>
-    `${position.r}_${position.c}`
-
 const getPosition = (hash: string): U.Position => ({
-    c: Number(U.at(hash.split("_"), -1)),
-    r: Number(U.at(hash.split("_"), 0)),
+    c: Number(U.at(U.unhash(hash), -1)),
+    r: Number(U.at(U.unhash(hash), 0)),
 })
 
 const getRegion = (
@@ -13,7 +10,7 @@ const getRegion = (
     position: U.Position,
     visited: Set<string> = new Set(),
 ): string[] => {
-    const positionHash = getPositionHash(position)
+    const positionHash = U.hash(position.r, position.c)
 
     if (visited.has(positionHash)) return []
 
@@ -53,7 +50,7 @@ const getUnvisited = (grid: U.Grid<string>): Set<string> =>
     new Set(
         U.map2D(grid, (_, index) => index)
             .flat()
-            .map(getPositionHash),
+            .map(({ c, r }) => U.hash(r, c)),
     )
 
 const evaluateRegions = (

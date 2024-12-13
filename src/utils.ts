@@ -212,6 +212,8 @@ export const left = ({ x, y, z }: Coordinate): Coordinate => ({
     z,
 })
 
+export const hash = (...values: (number | string)[]): string => values.join("_")
+
 export const manhattan = (left: Position, right: Position): number =>
     distance(left.r, right.r) + distance(left.c, right.c)
 
@@ -317,6 +319,8 @@ export const square = (
 
 export const sum = (numbers: number[]): number =>
     numbers.reduce((left, right) => left + right, 0)
+
+export const unhash = (hash: string): string[] => hash.split("_")
 
 export const unique = <T>(
     array: T[],

@@ -21,13 +21,10 @@ const parse = (
             grid
                 .flat()
                 .filter(({ cell }) => cell === "#")
-                .map(({ position }) => getHash(position)),
+                .map(({ position }) => U.hash(position.r, position.c)),
         ),
     }
 }
-
-const getHash = ({ c, r }: U.Position, facing = ""): string =>
-    `${r}_${c}_${facing}`
 
 const getNextDirection = (
     facing: string,
@@ -76,9 +73,9 @@ export const move = (
 ): { facing: string; position: U.Position } => {
     const path = getPath(guard, grid.length)
     const obstacleIndex = path.findIndex((position) => {
-        if (obstacles.has(getHash(position))) return true
+        if (obstacles.has(U.hash(position.r, position.c))) return true
 
-        visited.add(getHash(position, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
+        visited.add(U.hash(position.r, position.c, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
 
         return false
     })
@@ -112,7 +109,7 @@ const navigate = (
     visited: Set<string>
 } =>
     (
-        visited.has(getHash(guard.position, guard.facing)) ||
+        visited.has(U.hash(guard.position.r, guard.position.c, guard.facing)) ||
         edge(guard.position, grid.length)
     ) ?
         { guard, visited }
@@ -131,7 +128,9 @@ const getVisited = (payload: {
     obstacles: Set<string>
 }): string[] =>
     U.unique(
-        [...navigate(payload).visited].map((string) => string.slice(0, -1)),
+        [...navigate(payload).visited].map((string) =>
+            U.hash(...U.unhash(string).slice(0, -1)),
+        ),
     )
 
 /* --------------------------------- part01 --------------------------------- */
@@ -146,8 +145,11 @@ export const part02 = (input: string): number => {
     return U.count(
         getVisited({ grid, guard, obstacles }).filter(
             (hash) =>
-                hash !== getHash(U.north(guard.position)) &&
-                hash !== getHash(guard.position),
+                hash !==
+                    U.hash(
+                        U.north(guard.position).r,
+                        U.north(guard.position).c,
+                    ) && hash !== U.hash(guard.position.r, guard.position.c),
         ),
         (possibleObstacle) =>
             !edge(

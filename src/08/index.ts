@@ -17,7 +17,7 @@ const parse = (
                                 U.cell(grid, position) !== "." &&
                                 U.cell(grid, position) !== "#",
                         )
-                        .map(getHash),
+                        .map(({ c, r }) => U.hash(r, c)),
                     (hash) => U.guard(U.cell(grid, getPosition(hash))),
                 ),
             ).map(([key, value]) => [key, new Set(value)]),
@@ -26,11 +26,9 @@ const parse = (
     }
 }
 
-const getHash = ({ c, r }: U.Position): string => `${r}_${c}`
-
 const getPosition = (hash: string): U.Position => ({
-    c: Number(U.at(hash.split("_"), -1)),
-    r: Number(U.at(hash.split("_"), 0)),
+    c: Number(U.at(U.unhash(hash), -1)),
+    r: Number(U.at(U.unhash(hash), 0)),
 })
 
 const getLeftAntiNodes = (
@@ -79,7 +77,7 @@ const solve = (
                         ),
                 ),
         ),
-        getHash,
+        ({ c, r }) => U.hash(r, c),
     ).length
 
 /* --------------------------------- part01 --------------------------------- */
