@@ -1,6 +1,6 @@
 import { at } from "@/array"
 import { type Grid, makeGrid, mapGrid } from "@/grid"
-import { sum } from "@/number"
+import { middle, sum } from "@/number"
 import { safe } from "@/utils"
 
 const parse = (
@@ -37,7 +37,7 @@ const solve = (
         updates
             .filter((update) => isValid(rules, update))
             .map((update) => sort(rules, update))
-            .map((update) => at(update, Math.floor(update.length / 2))),
+            .map((update) => at(update, middle(update.length))),
     )
 }
 
