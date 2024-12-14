@@ -10,7 +10,7 @@ import {
     south,
     west,
 } from "@/grid"
-import { hash, safe } from "@/utils"
+import { makeHash, safe } from "@/utils"
 
 const parse = (
     input: string,
@@ -33,7 +33,7 @@ const parse = (
             grid
                 .flat()
                 .filter(({ cell }) => cell === "#")
-                .map(({ position: { c, r } }) => hash(r, c)),
+                .map(({ position: { c, r } }) => makeHash(r, c)),
         ),
     }
 }
@@ -85,9 +85,9 @@ export const move = (
 ): { facing: string; position: Position } => {
     const path = getPath(guard, grid.length)
     const obstacleIndex = path.findIndex((position) => {
-        if (obstacles.has(hash(position.r, position.c))) return true
+        if (obstacles.has(makeHash(position.r, position.c))) return true
 
-        visited.add(hash(position.r, position.c, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
+        visited.add(makeHash(position.r, position.c, guard.facing)) // eslint-disable-line functional/no-expression-statements, no-restricted-syntax
 
         return false
     })
@@ -121,8 +121,9 @@ const navigate = (
     visited: Set<string>
 } =>
     (
-        visited.has(hash(guard.position.r, guard.position.c, guard.facing)) ||
-        edge(guard.position, grid.length)
+        visited.has(
+            makeHash(guard.position.r, guard.position.c, guard.facing),
+        ) || edge(guard.position, grid.length)
     ) ?
         { guard, visited }
     :   navigate(
@@ -141,7 +142,7 @@ const getVisited = (payload: {
 }): string[] =>
     unique(
         [...navigate(payload).visited].map((string) =>
-            hash(...string.split("_").slice(0, -1)),
+            makeHash(...string.split("_").slice(0, -1)),
         ),
     )
 
@@ -158,8 +159,11 @@ export const part02 = (input: string): number => {
         getVisited({ grid, guard, obstacles }).filter(
             (positionHash) =>
                 positionHash !==
-                    hash(north(guard.position).r, north(guard.position).c) &&
-                positionHash !== hash(guard.position.r, guard.position.c),
+                    makeHash(
+                        north(guard.position).r,
+                        north(guard.position).c,
+                    ) &&
+                positionHash !== makeHash(guard.position.r, guard.position.c),
         ),
         (possibleObstacle) =>
             !edge(

@@ -3,13 +3,13 @@ export const mutateArray = <T>(array: T[], mutations: [number, T][]): T[] =>
         // eslint-disable-next-line functional/immutable-data, functional/no-expression-statements
         currentArray[index] = value
 
-        return array
+        return currentArray
     }, array)
 
-export const mutateMap = <T>(
-    map: Map<string, T>,
-    mutations: [string, T][],
-): Map<string, T> =>
+export const mutateMap = <T, U>(
+    map: Map<T, U>,
+    mutations: [T, U][],
+): Map<T, U> =>
     mutations.reduce(
         (currentMap, [key, value]) =>
             // eslint-disable-next-line no-restricted-syntax
@@ -25,7 +25,7 @@ export const mutateObject = <T>(
         // eslint-disable-next-line functional/immutable-data, functional/no-expression-statements
         currentObject[key] = value
 
-        return object
+        return currentObject
     }, object)
 
 export const mutateSet = <T>(set: Set<T>, mutations: T[]): Set<T> =>

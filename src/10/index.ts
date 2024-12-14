@@ -8,7 +8,7 @@ import {
     square,
     unsafeAtPosition,
 } from "@/grid"
-import { hash, isDefined } from "@/utils"
+import { isDefined, makeHash } from "@/utils"
 
 const parse = (input: string): Grid<number> => mapGrid(makeGrid(input), Number)
 
@@ -52,7 +52,7 @@ export const part01 = (input: string): number => {
     })
 
     const uniquePaths = unique(paths, ({ end, start }) =>
-        hash(start.r, start.c, end.r, end.c),
+        makeHash(start.r, start.c, end.r, end.c),
     )
 
     return uniquePaths.length

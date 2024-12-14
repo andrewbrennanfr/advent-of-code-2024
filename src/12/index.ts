@@ -10,7 +10,7 @@ import {
 } from "@/grid"
 import { mutateSet } from "@/mutation"
 import { sum } from "@/number"
-import { hash } from "@/utils"
+import { makeHash } from "@/utils"
 
 const parse = (input: string): Grid<string> => makeGrid(input)
 
@@ -27,7 +27,7 @@ const getRegion = (
     position: Position,
     visited: Set<string> = new Set(),
 ): string[] => {
-    const positionHash = hash(position.r, position.c)
+    const positionHash = makeHash(position.r, position.c)
 
     if (visited.has(positionHash)) return []
 
@@ -49,7 +49,7 @@ const getRegion = (
 const getUnvisited = (grid: Grid<string>): Set<string> => {
     const gridIndexes = mapGrid(grid, (__, index) => index)
     const positions = gridIndexes.flat()
-    const positionHashes = positions.map(({ c, r }) => hash(r, c))
+    const positionHashes = positions.map(({ c, r }) => makeHash(r, c))
 
     return new Set(positionHashes)
 }

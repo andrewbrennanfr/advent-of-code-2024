@@ -1,7 +1,7 @@
 import { at } from "@/array"
 import { makeGrid } from "@/grid"
 import { isEven, sum } from "@/number"
-import { memo } from "@/utils"
+import { memoize } from "@/utils"
 
 const parse = (input: string): number[] => {
     const grid = makeGrid(input, " ")
@@ -24,7 +24,7 @@ const evaluate = (number: number): number[] => {
     return [number * 2024]
 }
 
-const solve = memo((numbers: number[], times: number): number => {
+const solve = memoize((numbers: number[], times: number): number => {
     if (times === 0) return 1
 
     if (numbers.length === 1) {

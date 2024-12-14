@@ -1,10 +1,7 @@
 import { safe } from "@/utils"
 
-export const unsafeAt = <T>(array: T[], index: number): T | undefined =>
-    array.at(index)
-
 export const at = <T>(array: T[], index: number): NonNullable<T> =>
-    safe(unsafeAt(array, index))
+    safe(array.at(index))
 
 export const count = <T>(
     array: T[],
@@ -12,20 +9,26 @@ export const count = <T>(
 ): number => array.filter(predicate).length
 
 export const order = <T>(array: T[]): T[] =>
-    array.toSorted((left, right) =>
-        left < right ? -1
-        : right > left ? 1
-        : 0,
-    )
+    array.toSorted((left, right) => {
+        if (left < right) return -1
+
+        if (right > left) return 1
+
+        return 0
+    })
 
 export const unique = <T>(
     array: T[],
     hash: (value: T, index: number, array: T[]) => string = String,
 ): T[] => {
     const hashMap = Object.fromEntries(
-        array.map((value, index) => [hash(value, index, array), value]),
-    )
-    const hashes = new Set(Object.keys(hashMap))
+        array.map((value, index) => {
+            const hashMapKey = hash(value, index, array)
 
-    return [...hashes].map((hashMapKey) => safe(hashMap[hashMapKey]))
+            return [hashMapKey, value]
+        }),
+    )
+    const hashMapKeys = new Set(Object.keys(hashMap))
+
+    return [...hashMapKeys].map((hashMapKey) => safe(hashMap[hashMapKey]))
 }
