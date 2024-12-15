@@ -1,3 +1,7 @@
+import type { Grid, Position } from "@/grid"
+
+import { isDefined, panic } from "@/utils"
+
 export const mutateArray = <T>(array: T[], mutations: [number, T][]): T[] =>
     mutations.reduce((currentArray, [index, value]) => {
         // eslint-disable-next-line functional/immutable-data, functional/no-expression-statements
@@ -16,6 +20,21 @@ export const mutateMap = <T, U>(
             currentMap.set(key, value),
         map,
     )
+
+export const mutateGrid = <T>(
+    grid: Grid<T>,
+    mutations: [Position, T][],
+): Grid<T> =>
+    mutations.reduce((currentGrid, [{ c, r }, value]) => {
+        const row = currentGrid[r]
+
+        if (!isDefined(row)) return panic("Grid row not found!")
+
+        // eslint-disable-next-line functional/immutable-data, functional/no-expression-statements
+        row[c] = value
+
+        return currentGrid
+    }, grid)
 
 export const mutateObject = <T>(
     object: Record<string, T>,

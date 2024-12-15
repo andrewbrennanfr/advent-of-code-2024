@@ -78,7 +78,6 @@ export const frontDownLeft = (coordinate: Coordinate): Coordinate =>
 export const frontUpLeft = (coordinate: Coordinate): Coordinate =>
     frontUp(left(coordinate))
 
-// eslint-disable-next-line max-lines-per-function
 export const cube = (
     coordinate: Coordinate,
 ): Record<
