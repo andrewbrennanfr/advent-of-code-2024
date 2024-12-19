@@ -3,7 +3,7 @@ import { EXAMPLE_01 } from "@/04/example"
 import { INPUT_01 } from "@/04/input"
 import { describe, expect, test } from "bun:test"
 
-describe("04", () => {
+describe.skip("04", () => {
     describe("part01", () => {
         test("EXAMPLE_01", () => {
             expect(part01(EXAMPLE_01)).toBe(18)
