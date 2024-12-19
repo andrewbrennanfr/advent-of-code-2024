@@ -1,6 +1,6 @@
 import { at, count } from "@/array"
 import { sum } from "@/number"
-import { memoize } from "@/utils"
+import { makeHash, memoize } from "@/utils"
 
 const parse = (
     input: string,
@@ -17,21 +17,17 @@ const parse = (
 }
 
 const countCombinations = memoize(
-    (design: string, patterns: string[]): number => {
-        if (design.length === 0) return 1
-
-        const possibleNext = patterns.filter((pattern) =>
-            design.startsWith(pattern),
-        )
-
-        if (possibleNext.length === 0) return 0
-
-        return sum(
-            possibleNext.map((next) =>
-                countCombinations(design.slice(next.length), patterns),
+    (design: string, patterns: string[]): number =>
+        design.length === 0 ?
+            1
+        :   sum(
+                patterns
+                    .filter((pattern) => design.startsWith(pattern))
+                    .map((next) =>
+                        countCombinations(design.slice(next.length), patterns),
+                    ),
             ),
-        )
-    },
+    ([design, patterns]) => makeHash(design, patterns.length),
 )
 
 /* --------------------------------- part01 --------------------------------- */
@@ -47,7 +43,5 @@ export const part01 = (input: string): number => {
 export const part02 = (input: string): number => {
     const { designs, patterns } = parse(input)
 
-    const counts = designs.map((design) => countCombinations(design, patterns))
-
-    return sum(counts)
+    return sum(designs.map((design) => countCombinations(design, patterns)))
 }
