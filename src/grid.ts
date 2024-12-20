@@ -30,6 +30,15 @@ export const southEast = (position: Position): Position => south(east(position))
 export const southWest = (position: Position): Position => south(west(position))
 export const northWest = (position: Position): Position => north(west(position))
 
+export const cross = (
+    position: Position,
+): Record<"east" | "north" | "south" | "west", Position> => ({
+    east: east(position),
+    north: north(position),
+    south: south(position),
+    west: west(position),
+})
+
 export const square = (
     position: Position,
 ): Record<
