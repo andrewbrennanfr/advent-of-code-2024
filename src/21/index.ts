@@ -1,241 +1,240 @@
-import { at } from "@/array"
 import { sum } from "@/number"
 import { memoize, safe } from "@/utils"
 
 /* eslint-disable */
-const NUMBER_MAPPING: Record<string, Record<string, string[]>> = {
+const NUMBER_MAPPING: Record<string, Record<string, string>> = {
     "7": {
-        "7": ["A"],
-        "8": [">A"],
-        "9": [">>A"],
+        "7": "A",
+        "8": ">A",
+        "9": ">>A",
 
-        "4": ["vA"],
-        "5": ["v>A", ">vA"],
-        "6": ["v>>A", ">>vA"],
+        "4": "vA",
+        "5": "v>A",
+        "6": "v>>A",
 
-        "1": ["vvA"],
-        "2": ["vv>A", ">vvA"],
-        "3": ["vv>>A", ">>vvA"],
+        "1": "vvA",
+        "2": "vv>A",
+        "3": "vv>>A",
 
-        "0": [">vvvA"],
-        A: [">>vvvA"],
+        "0": ">vvvA",
+        A: ">>vvvA",
     },
 
     "8": {
-        "7": ["<A"],
-        "8": ["A"],
-        "9": [">A"],
+        "7": "<A",
+        "8": "A",
+        "9": ">A",
 
-        "4": ["v<A", "<vA"],
-        "5": ["vA"],
-        "6": ["v>A", ">vA"],
+        "4": "v<A",
+        "5": "vA",
+        "6": "v>A",
 
-        "1": ["vv<A", "<vvA"],
-        "2": ["vvA"],
-        "3": [">vvA", "vv>A"],
+        "1": "vv<A",
+        "2": "vvA",
+        "3": "vv>A",
 
-        "0": ["vvvA"],
-        A: ["vvv>A", ">vvvA"],
+        "0": "vvvA",
+        A: "vvv>A",
     },
 
     "9": {
-        "7": ["<<A"],
-        "8": ["<A"],
-        "9": ["A"],
+        "7": "<<A",
+        "8": "<A",
+        "9": "A",
 
-        "4": ["v<<A", "<<vA"],
-        "5": ["v<A", "<vA"],
-        "6": ["vA"],
+        "4": "v<<A",
+        "5": "v<A",
+        "6": "vA",
 
-        "1": ["vv<<A", "<<vvA"],
-        "2": ["vv<A", "<vvA"],
-        "3": ["vvA"],
+        "1": "vv<<A",
+        "2": "vv<A",
+        "3": "vvA",
 
-        "0": ["vvv<A", "<vvvA"],
-        A: ["vvvA"],
+        "0": "<vvvA",
+        A: "vvvA",
     },
 
     "4": {
-        "7": ["^A"],
-        "8": [">^A", "^>A"],
-        "9": [">>^A", "^>>A"],
+        "7": "^A",
+        "8": "^>A",
+        "9": ">>^A",
 
-        "4": ["A"],
-        "5": [">A"],
-        "6": [">>A"],
+        "4": "A",
+        "5": ">A",
+        "6": ">>A",
 
-        "1": ["vA"],
-        "2": [">vA", "v>A"],
-        "3": [">>vA", "v>>A"],
+        "1": "vA",
+        "2": ">vA",
+        "3": ">>vA",
 
-        "0": [">vvA"],
-        A: [">>vvA"],
+        "0": ">vvA",
+        A: ">>vvA",
     },
 
     "5": {
-        "7": ["^<A", "<^A"],
-        "8": ["^A"],
-        "9": ["^>A", ">^A"],
+        "7": "^<A",
+        "8": "^A",
+        "9": "^>A",
 
-        "4": ["<A"],
-        "5": ["A"],
-        "6": [">A"],
+        "4": "<A",
+        "5": "A",
+        "6": ">A",
 
-        "1": ["v<A", "<vA"],
-        "2": ["vA"],
-        "3": ["v>A", ">vA"],
+        "1": "v<A",
+        "2": "vA",
+        "3": "v>A",
 
-        "0": ["vvA"],
-        A: [">vvA", "vv>A"],
+        "0": "vvA",
+        A: ">vvA",
     },
 
     "6": {
-        "7": ["^<<A", "<<^A"],
-        "8": ["^<A", "<^A"],
-        "9": ["^A"],
+        "7": "^<<A",
+        "8": "<^A",
+        "9": "^A",
 
-        "4": ["<<A"],
-        "5": ["<A"],
-        "6": ["A"],
+        "4": "<<A",
+        "5": "<A",
+        "6": "A",
 
-        "1": ["v<<A", "<<vA"],
-        "2": ["v<A", "<vA"],
-        "3": ["vA"],
+        "1": "v<<A",
+        "2": "v<A",
+        "3": "vA",
 
-        "0": ["vv<A", "<vvA"],
-        A: ["vvA"],
+        "0": "vv<A",
+        A: "vvA",
     },
 
     "1": {
-        "7": ["^^A"],
-        "8": ["^^>A", ">^^A"],
-        "9": [">>^^A", "^^>>A"],
+        "7": "^^A",
+        "8": "^^>A",
+        "9": ">>^^A",
 
-        "4": ["^A"],
-        "5": ["^>A", ">^A"],
-        "6": [">>^A", "^>>A"],
+        "4": "^A",
+        "5": "^>A",
+        "6": ">>^A",
 
-        "1": ["A"],
-        "2": [">A"],
-        "3": [">>A"],
+        "1": "A",
+        "2": ">A",
+        "3": ">>A",
 
-        "0": [">vA"],
-        A: [">>vA"],
+        "0": ">vA",
+        A: ">>vA",
     },
 
     "2": {
-        "7": ["^^<A", "<^^A"],
-        "8": ["^^A"],
-        "9": ["^^>A", ">^^A"],
+        "7": "^^<A",
+        "8": "^^A",
+        "9": "^^>A",
 
-        "4": ["^<A", "<^A"],
-        "5": ["^A"],
-        "6": ["^>A", ">^A"],
+        "4": "^<A",
+        "5": "^A",
+        "6": "^>A",
 
-        "1": ["<A"],
-        "2": ["A"],
-        "3": [">A"],
+        "1": "<A",
+        "2": "A",
+        "3": ">A",
 
-        "0": ["vA"],
-        A: [">vA", "v>A"],
+        "0": "vA",
+        A: "v>A",
     },
 
     "3": {
-        "7": ["<<^^A", "^^<<A"],
-        "8": ["<^^A", "^^<A"],
-        "9": ["^^A"],
+        "7": "<<^^A",
+        "8": "^^<A",
+        "9": "^^A",
 
-        "4": ["^<<A", "<<^A"],
-        "5": ["^<A", "<^A"],
-        "6": ["^A"],
+        "4": "<<^A",
+        "5": "<^A",
+        "6": "^A",
 
-        "1": ["<<A"],
-        "2": ["<A"],
-        "3": ["A"],
+        "1": "<<A",
+        "2": "<A",
+        "3": "A",
 
-        "0": ["v<A", "<vA"],
-        A: ["vA"],
+        "0": "<vA",
+        A: "vA",
     },
 
     "0": {
-        "7": ["^^^<A"],
-        "8": ["^^^A"],
-        "9": ["^^^>A", ">^^^A"],
+        "7": "^^^<A",
+        "8": "^^^A",
+        "9": ">^^^A",
 
-        "4": ["^^<A"],
-        "5": ["^^A"],
-        "6": ["^^>A", ">^^A"],
+        "4": "^^<A",
+        "5": "^^A",
+        "6": ">^^A",
 
-        "1": ["^<A"],
-        "2": ["^A"],
-        "3": ["^>A", ">^A"],
+        "1": "^<A",
+        "2": "^A",
+        "3": ">^A",
 
-        "0": ["A"],
-        A: [">A"],
+        "0": "A",
+        A: ">A",
     },
 
     A: {
-        "7": ["^^^<<A"],
-        "8": ["^^^<A", "<^^^A"],
-        "9": ["^^^A"],
+        "7": "^^^<<A",
+        "8": "<^^^A",
+        "9": "^^^A",
 
-        "4": ["^^<<A"],
-        "5": ["^^<A", "<^^A"],
-        "6": ["^^A"],
+        "4": "^^<<A",
+        "5": "^^<A",
+        "6": "^^A",
 
-        "1": ["^<<A"],
-        "2": ["^<A", "<^A"],
-        "3": ["^A"],
+        "1": "^<<A",
+        "2": "^<A",
+        "3": "^A",
 
-        "0": ["<A"],
-        A: ["A"],
+        "0": "<A",
+        A: "A",
     },
 }
 
-const ARROW_MAPPING: Record<string, Record<string, string[]>> = {
+const ARROW_MAPPING: Record<string, Record<string, string>> = {
     A: {
-        A: ["A"],
-        "^": ["<A"],
+        A: "A",
+        "^": "<A",
 
-        "<": ["v<<A"],
-        v: ["v<A", "<vA"],
-        ">": ["vA"],
+        "<": "v<<A",
+        v: "<vA",
+        ">": "vA",
     },
 
     "^": {
-        A: [">A"],
-        "^": ["A"],
+        A: ">A",
+        "^": "A",
 
-        "<": ["v<A"],
-        v: ["vA"],
-        ">": ["v>A", ">vA"],
+        "<": "v<A",
+        v: "vA",
+        ">": "v>A",
     },
 
     "<": {
-        A: [">>^A"],
-        "^": [">^A"],
+        A: ">>^A",
+        "^": ">^A",
 
-        "<": ["A"],
-        v: [">A"],
-        ">": [">>A"],
+        "<": "A",
+        v: ">A",
+        ">": ">>A",
     },
 
     v: {
-        A: [">^A", "^>A"],
-        "^": ["^A"],
+        A: "^>A",
+        "^": "^A",
 
-        "<": ["<A"],
-        v: ["A"],
-        ">": [">A"],
+        "<": "<A",
+        v: "A",
+        ">": ">A",
     },
 
     ">": {
-        A: ["^A"],
-        "^": ["^<A", "<^A"],
+        A: "^A",
+        "^": "<^A",
 
-        "<": ["<<A"],
-        v: ["<A"],
-        ">": ["A"],
+        "<": "<<A",
+        v: "<A",
+        ">": "A",
     },
 }
 /* eslint-enable */
@@ -250,20 +249,9 @@ const getShortestNumberSequence = (
     const target = safe(code.at(0))
 
     if (code.length === 1) {
-        const possibleMappings = safe(safe(NUMBER_MAPPING[current])[target])
-        const possibleNextSteps = possibleMappings.map((sequence) =>
-            getShortestDirectionSequence(sequence, "A", times),
-        )
+        const mapping = safe(safe(NUMBER_MAPPING[current])[target])
 
-        const orderedBySize = possibleNextSteps.toSorted((left, right) => {
-            if (left < right) return -1
-
-            if (right > left) return 1
-
-            return 0
-        })
-
-        return at(orderedBySize, 0)
+        return getShortestDirectionSequence(mapping, "A", times)
     }
 
     return (
@@ -277,21 +265,13 @@ const getShortestDirectionSequence = memoize(
         const target = safe(code.at(0))
 
         if (code.length === 1) {
-            const possibleMappings = safe(safe(ARROW_MAPPING[current])[target])
-            const possibleNextSteps = possibleMappings.map((sequence) =>
-                (times === 2 ? getDirectionSequence : (
+            const mapping = safe(safe(ARROW_MAPPING[current])[target])
+            const nextStep = (
+                times === 2 ? getDirectionSequence : (
                     getShortestDirectionSequence
-                ))(sequence, "A", times - 1),
-            )
-            const orderedBySize = possibleNextSteps.toSorted((left, right) => {
-                if (left < right) return -1
+                ))(mapping, "A", times - 1)
 
-                if (right > left) return 1
-
-                return 0
-            })
-
-            return at(orderedBySize, 0)
+            return nextStep
         }
 
         return (
@@ -304,11 +284,8 @@ const getShortestDirectionSequence = memoize(
 const getDirectionSequence = (code: string, current: string): number => {
     const target = safe(code.at(0))
 
-    if (code.length === 1) {
-        const possibleMappings = safe(safe(ARROW_MAPPING[current])[target])
-
-        return at(possibleMappings, 0).length
-    }
+    if (code.length === 1)
+        return safe(safe(ARROW_MAPPING[current])[target]).length
 
     return (
         getDirectionSequence(target, current) +
