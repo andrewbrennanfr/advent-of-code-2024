@@ -1,6 +1,5 @@
 import { at, unique } from "@/array"
-import { mutateArray, mutateObject } from "@/mutation"
-import { isDefined } from "@/utils"
+import { mutateArray, mutateMap } from "@/mutation"
 
 const parse = (input: string): bigint[] => input.trim().split("\n").map(BigInt)
 
@@ -8,9 +7,7 @@ const mix = (left: bigint, right: bigint): bigint => left ^ right // eslint-disa
 
 const prune = (number: bigint): bigint => number % 16_777_216n
 
-const generateNextNumber = (number: bigint, times: bigint): bigint => {
-    if (times === 0n) return number
-
+const transformNumber = (number: bigint): bigint => {
     const multiBy64 = number * 64n
     const firstMix = mix(number, multiBy64)
     const firstPrune = prune(firstMix)
@@ -23,25 +20,29 @@ const generateNextNumber = (number: bigint, times: bigint): bigint => {
     const thirdMix = mix(secondPrune, multiBy2048)
     const thirdPrune = prune(thirdMix)
 
-    return generateNextNumber(thirdPrune, times - 1n)
+    return thirdPrune
 }
+
+const generateNextNumber = (number: bigint, times: number): bigint =>
+    times === 0 ? number : (
+        generateNextNumber(transformNumber(number), times - 1)
+    )
 
 const getPrices = (
     number: bigint,
-    times: bigint,
-    result: bigint[] = [],
-): bigint[] => {
-    if (times === 0n) return result
-
-    return getPrices(
-        generateNextNumber(number, 1n),
-        times - 1n,
-        mutateArray(result, [[result.length, number % 10n]]),
+    times: number,
+    result: number[] = [],
+): number[] =>
+    times === 0 ? result : (
+        getPrices(
+            generateNextNumber(number, 1),
+            times - 1,
+            mutateArray(result, [[result.length, Number(number % 10n)]]),
+        )
     )
-}
 
-const getPriceChanges = (prices: bigint[]): bigint[] =>
-    prices.reduce<bigint[]>(
+const getPriceChanges = (prices: number[]): number[] =>
+    prices.reduce<number[]>(
         (sequences, number, index) =>
             index === 0 ? sequences : (
                 mutateArray(sequences, [
@@ -52,27 +53,27 @@ const getPriceChanges = (prices: bigint[]): bigint[] =>
     )
 
 const getPossiblePriceChanges = (
-    priceChanges: bigint[],
-    prices: bigint[],
-): Record<string, number> =>
-    priceChanges.reduce<Record<string, number>>(
+    priceChanges: number[],
+    prices: number[],
+): Map<string, number> =>
+    priceChanges.reduce<Map<string, number>>(
         (possiblePriceChanges, priceChange, index) => {
             if (index < 3) return possiblePriceChanges
 
-            const oneBelow = at(priceChanges, index - 1)
-            const twoBelow = at(priceChanges, index - 2)
-            const threeBelow = at(priceChanges, index - 3)
+            const key = [
+                at(priceChanges, index - 1),
+                at(priceChanges, index - 2),
+                at(priceChanges, index - 3),
+                priceChange,
+            ].join(",")
 
-            const key = [threeBelow, twoBelow, oneBelow, priceChange].join(",")
+            if (possiblePriceChanges.has(key)) return possiblePriceChanges
 
-            if (isDefined(possiblePriceChanges[key]))
-                return possiblePriceChanges
-
-            const price = at(prices, index + 1)
-
-            return mutateObject(possiblePriceChanges, [[key, Number(price)]])
+            return mutateMap(possiblePriceChanges, [
+                [key, Number(at(prices, index + 1))],
+            ])
         },
-        {},
+        new Map(),
     )
 
 /* --------------------------------- part01 --------------------------------- */
@@ -81,7 +82,7 @@ export const part01 = (input: string): bigint => {
     const initialNumbers = parse(input)
 
     const outputNumbers = initialNumbers.map((number) =>
-        generateNextNumber(number, 2000n),
+        generateNextNumber(number, 2000),
     )
 
     return outputNumbers.reduce((left, right) => left + right, 0n)
@@ -92,7 +93,7 @@ export const part01 = (input: string): bigint => {
 export const part02 = (input: string): number => {
     const initialNumbers = parse(input)
 
-    const priceLists = initialNumbers.map((number) => getPrices(number, 2001n))
+    const priceLists = initialNumbers.map((number) => getPrices(number, 2001))
     const priceChangeLists = priceLists.map(getPriceChanges)
 
     const possiblePriceChangeLists = priceChangeLists.map(
@@ -101,17 +102,19 @@ export const part02 = (input: string): number => {
     )
 
     const possibleKeys = unique(
-        possiblePriceChangeLists.flatMap((possiblePriceChanges) =>
-            Object.keys(possiblePriceChanges),
-        ),
+        possiblePriceChangeLists.flatMap((possiblePriceChanges) => [
+            ...possiblePriceChanges.keys(),
+        ]),
     )
 
-    const possibleValues = possibleKeys.map((key) =>
-        possiblePriceChangeLists.reduce(
-            (left, list) => left + (list[key] ?? 0),
-            0,
-        ),
-    )
+    const possibleValues = possibleKeys
+        .values()
+        .map((key) =>
+            possiblePriceChangeLists.reduce(
+                (left, list) => left + (list.get(key) ?? 0),
+                0,
+            ),
+        )
 
     const maxValue = Math.max(...possibleValues)
 
